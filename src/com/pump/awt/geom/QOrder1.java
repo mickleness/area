@@ -29,7 +29,6 @@ package com.pump.awt.geom;
 
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
-import java.util.Vector;
 
 final class QOrder1 extends QCurve {
     private double x0;

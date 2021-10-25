@@ -27,10 +27,7 @@
 
 package com.pump.awt.geom;
 
-import java.util.Vector;
-import java.util.Enumeration;
-import java.util.Comparator;
-import java.util.Arrays;
+import java.util.*;
 
 public abstract class QAreaOp {
     public abstract static class CAGOp extends QAreaOp {
@@ -154,11 +151,11 @@ public abstract class QAreaOp {
 
     public abstract int getState();
 
-    public Vector<QCurve> calculate(Vector<QCurve> left, Vector<QCurve> right) {
-        Vector<QEdge> edges = new Vector<>();
+    public List<QCurve> calculate(List<QCurve> left, List<QCurve> right) {
+        List<QEdge> edges = new ArrayList<>();
         addEdges(edges, left, QAreaOp.CTAG_LEFT);
         addEdges(edges, right, QAreaOp.CTAG_RIGHT);
-        Vector<QCurve> curves = pruneEdges(edges);
+        List<QCurve> curves = pruneEdges(edges);
         if (false) {
             System.out.println("result: ");
             int numcurves = curves.size();
@@ -170,10 +167,10 @@ public abstract class QAreaOp {
         return curves;
     }
 
-    private static void addEdges(Vector<QEdge> edges, Vector<QCurve> curves, int curvetag) {
-        Enumeration<QCurve> enum_ = curves.elements();
-        while (enum_.hasMoreElements()) {
-            QCurve c = enum_.nextElement();
+    private static void addEdges(List<QEdge> edges, List<QCurve> curves, int curvetag) {
+        Iterator<QCurve> iter = curves.iterator();
+        while (iter.hasNext()) {
+            QCurve c = iter.next();
             if (c.getOrder() > 0) {
                 edges.add(new QEdge(c, curvetag));
             }
@@ -197,11 +194,11 @@ public abstract class QAreaOp {
         }
     };
 
-    private Vector<QCurve> pruneEdges(Vector<QEdge> edges) {
+    private List<QCurve> pruneEdges(List<QEdge> edges) {
         int numedges = edges.size();
         if (numedges < 2) {
-            // empty vector is expected with less than 2 edges
-            return new Vector<>();
+            // empty list is expected with less than 2 edges
+            return new ArrayList<>();
         }
         QEdge[] edgelist = edges.toArray(new QEdge[numedges]);
         Arrays.sort(edgelist, YXTopComparator);
@@ -217,9 +214,9 @@ public abstract class QAreaOp {
         int cur = 0;
         int next = 0;
         double[] yrange = new double[2];
-        Vector<QCurveLink> subcurves = new Vector<>();
-        Vector<QChainEnd> chains = new Vector<>();
-        Vector<QCurveLink> links = new Vector<>();
+        List<QCurveLink> subcurves = new ArrayList<>();
+        List<QChainEnd> chains = new ArrayList<>();
+        List<QCurveLink> links = new ArrayList<>();
         // Active edges are between left (inclusive) and right (exclusive)
         while (left < numedges) {
             double y = yrange[0];
@@ -388,7 +385,7 @@ public abstract class QAreaOp {
             if (false) {
                 System.out.println("new links:");
                 for (int i = 0; i < links.size(); i++) {
-                    QCurveLink link = links.elementAt(i);
+                    QCurveLink link = links.get(i);
                     System.out.println("  "+link.getSubCurve());
                 }
             }
@@ -399,10 +396,10 @@ public abstract class QAreaOp {
             yrange[0] = yend;
         }
         finalizeSubCurves(subcurves, chains);
-        Vector<QCurve> ret = new Vector<>();
-        Enumeration<QCurveLink> enum_ = subcurves.elements();
-        while (enum_.hasMoreElements()) {
-            QCurveLink link = enum_.nextElement();
+        List<QCurve> ret = new ArrayList<>();
+        Iterator<QCurveLink> iter = subcurves.iterator();
+        while (iter.hasNext()) {
+            QCurveLink link = iter.next();
             ret.add(link.getMoveto());
             QCurveLink nextlink = link;
             while ((nextlink = nextlink.getNext()) != null) {
@@ -416,8 +413,8 @@ public abstract class QAreaOp {
         return ret;
     }
 
-    public static void finalizeSubCurves(Vector<QCurveLink> subcurves,
-                                         Vector<QChainEnd> chains) {
+    public static void finalizeSubCurves(List<QCurveLink> subcurves,
+                                         List<QChainEnd> chains) {
         int numchains = chains.size();
         if (numchains == 0) {
             return;
@@ -441,9 +438,9 @@ public abstract class QAreaOp {
     private static QCurveLink[] EmptyLinkList = new QCurveLink[2];
     private static QChainEnd[] EmptyChainList = new QChainEnd[2];
 
-    public static void resolveLinks(Vector<QCurveLink> subcurves,
-                                    Vector<QChainEnd> chains,
-                                    Vector<QCurveLink> links)
+    public static void resolveLinks(List<QCurveLink> subcurves,
+                                    List<QChainEnd> chains,
+                                    List<QCurveLink> links)
     {
         int numlinks = links.size();
         QCurveLink[] linklist;

@@ -30,7 +30,8 @@ package com.pump.awt.geom;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.QuadCurve2D;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 final class QOrder3 extends QCurve {
     private double x0;
@@ -55,7 +56,7 @@ final class QOrder3 extends QCurve {
     private double ycoeff2;
     private double ycoeff3;
 
-    public static void insert(Vector<QCurve> curves, double[] tmp,
+    public static void insert(List<QCurve> curves, double[] tmp,
                               double x0, double y0,
                               double cx0, double cy0,
                               double cx1, double cy1,
@@ -107,7 +108,7 @@ final class QOrder3 extends QCurve {
         }
     }
 
-    public static void addInstance(Vector<QCurve> curves,
+    public static void addInstance(List<QCurve> curves,
                                    double x0, double y0,
                                    double cx0, double cy0,
                                    double cx1, double cy1,

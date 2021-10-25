@@ -27,8 +27,10 @@
 package com.pump.awt.geom;
 
 import java.awt.geom.PathIterator;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class QCrossings {
     public static final boolean debug = false;
@@ -78,14 +80,14 @@ public abstract class QCrossings {
 
     public abstract boolean covers(double ystart, double yend);
 
-    public static QCrossings findCrossings(Vector<? extends QCurve> curves,
+    public static QCrossings findCrossings(List<? extends QCurve> curves,
                                                        double xlo, double ylo,
                                                        double xhi, double yhi)
     {
         QCrossings cross = new QCrossings.EvenOdd(xlo, ylo, xhi, yhi);
-        Enumeration<? extends QCurve> enum_ = curves.elements();
-        while (enum_.hasMoreElements()) {
-            QCurve c = enum_.nextElement();
+        Iterator<? extends QCurve> iter = curves.iterator();
+        while (iter.hasNext()) {
+            QCurve c = iter.next();
             if (c.accumulateCrossings(cross)) {
                 return null;
             }
@@ -238,7 +240,7 @@ public abstract class QCrossings {
         return false;
     }
 
-    private Vector<QCurve> tmp = new Vector<>();
+    private List<QCurve> tmp = new ArrayList<>();
 
     public boolean accumulateQuad(double x0, double y0, double[] coords) {
         if (y0 < ylo && coords[1] < ylo && coords[3] < ylo) {
@@ -259,9 +261,9 @@ public abstract class QCrossings {
             return false;
         }
         QCurve.insertQuad(tmp, x0, y0, coords);
-        Enumeration<QCurve> enum_ = tmp.elements();
-        while (enum_.hasMoreElements()) {
-            QCurve c = enum_.nextElement();
+        Iterator<QCurve> iter = tmp.iterator();
+        while (iter.hasNext()) {
+            QCurve c = iter.next();
             if (c.accumulateCrossings(this)) {
                 return true;
             }
@@ -297,9 +299,9 @@ public abstract class QCrossings {
             return false;
         }
         QCurve.insertCubic(tmp, x0, y0, coords);
-        Enumeration<QCurve> enum_ = tmp.elements();
-        while (enum_.hasMoreElements()) {
-            QCurve c = enum_.nextElement();
+        Iterator<QCurve> iter = tmp.iterator();
+        while (iter.hasNext()) {
+            QCurve c = iter.next();
             if (c.accumulateCrossings(this)) {
                 return true;
             }

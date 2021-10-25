@@ -32,6 +32,8 @@ import java.awt.geom.QuadCurve2D;
 import java.awt.geom.CubicCurve2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.IllegalPathStateException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 public abstract class QCurve {
@@ -40,11 +42,11 @@ public abstract class QCurve {
 
     protected int direction;
 
-    public static void insertMove(Vector<QCurve> curves, double x, double y) {
+    public static void insertMove(List<QCurve> curves, double x, double y) {
         curves.add(new QOrder0(x, y));
     }
 
-    public static void insertLine(Vector<QCurve> curves,
+    public static void insertLine(List<QCurve> curves,
                                   double x0, double y0,
                                   double x1, double y1)
     {
@@ -61,7 +63,7 @@ public abstract class QCurve {
         }
     }
 
-    public static void insertQuad(Vector<QCurve> curves,
+    public static void insertQuad(List<QCurve> curves,
                                   double x0, double y0,
                                   double[] coords)
     {
@@ -84,7 +86,7 @@ public abstract class QCurve {
         }
     }
 
-    public static void insertCubic(Vector<QCurve> curves,
+    public static void insertCubic(List<QCurve> curves,
                                    double x0, double y0,
                                    double[] coords)
     {

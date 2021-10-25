@@ -29,9 +29,8 @@ package com.pump.awt.geom;
 
 import java.awt.*;
 import java.awt.geom.*;
-import java.util.Enumeration;
-import java.util.NoSuchElementException;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 public class QAreaImpl implements QArea<QAreaImpl> {
 
@@ -47,16 +46,14 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
     };
 
-    private static Vector<QCurve> EmptyCurves = new Vector<>();
-
-    private Vector<QCurve> curves;
+    private List<QCurve> curves;
 
     /**
      * Default constructor which creates an empty area.
      * @since 1.2
      */
     public QAreaImpl() {
-        curves = EmptyCurves;
+        curves = new ArrayList<>();
     }
 
     /**
@@ -77,8 +74,8 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
     }
 
-    private static Vector<QCurve> pathToCurves(PathIterator pi) {
-        Vector<QCurve> curves = new Vector<>();
+    private static List<QCurve> pathToCurves(PathIterator pi) {
+        List<QCurve> curves = new ArrayList<>();
         int windingRule = pi.getWindingRule();
         // coords array is big enough for holding:
         //     coordinates returned from currentSegment (6)
@@ -142,7 +139,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         } else {
             operator = new QAreaOp.NZWindOp();
         }
-        return operator.calculate(curves, EmptyCurves);
+        return operator.calculate(curves, new ArrayList<>());
     }
 
     /**
@@ -284,7 +281,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public void reset() {
-        curves = new Vector<>();
+        curves = new ArrayList<>();
         invalidateBounds();
     }
 
@@ -307,9 +304,9 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public boolean isPolygonal() {
-        Enumeration<QCurve> enum_ = curves.elements();
-        while (enum_.hasMoreElements()) {
-            if (enum_.nextElement().getOrder() > 1) {
+        Iterator<QCurve> iter = curves.iterator();
+        while (iter.hasNext()) {
+            if (iter.next().getOrder() > 1) {
                 return false;
             }
         }
@@ -361,10 +358,10 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (curves.size() < 3) {
             return true;
         }
-        Enumeration<QCurve> enum_ = curves.elements();
-        enum_.nextElement(); // First Order0 "moveto"
-        while (enum_.hasMoreElements()) {
-            if (enum_.nextElement().getOrder() == 0) {
+        Iterator<QCurve> iter = curves.iterator();
+        iter.next(); // First Order0 "moveto"
+        while(iter.hasNext()) {
+            if (iter.next().getOrder() == 0) {
                 return false;
             }
         }
@@ -457,7 +454,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (other == null) {
             return false;
         }
-        Vector<QCurve> c = new QAreaOp.XorOp().calculate(this.curves, other.curves);
+        List<QCurve> c = new QAreaOp.XorOp().calculate(this.curves, other.curves);
         return c.isEmpty();
     }
 
@@ -505,10 +502,10 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (!getCachedBounds().contains(x, y)) {
             return false;
         }
-        Enumeration<QCurve> enum_ = curves.elements();
+        Iterator<QCurve> iter = curves.iterator();
         int crossings = 0;
-        while (enum_.hasMoreElements()) {
-            QCurve c = enum_.nextElement();
+        while (iter.hasNext()) {
+            QCurve c = iter.next();
             crossings += c.crossingsFor(x, y);
         }
         return ((crossings & 1) == 1);
@@ -608,12 +605,12 @@ public class QAreaImpl implements QArea<QAreaImpl> {
 
 class QAreaIterator implements PathIterator {
     private AffineTransform transform;
-    private Vector<QCurve> curves;
+    private List<QCurve> curves;
     private int index;
     private QCurve prevcurve;
     private QCurve thiscurve;
 
-    public QAreaIterator(Vector<QCurve> curves, AffineTransform at) {
+    public QAreaIterator(List<QCurve> curves, AffineTransform at) {
         this.curves = curves;
         this.transform = at;
         if (curves.size() >= 1) {
