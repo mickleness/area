@@ -46,14 +46,14 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
     };
 
-    private List<QCurve> curves;
+    private ExposedArrayWrapper<QCurve> curves;
 
     /**
      * Default constructor which creates an empty area.
      * @since 1.2
      */
     public QAreaImpl() {
-        curves = new ArrayList<>();
+        curves = new ExposedArrayWrapper<>(QCurve.class);
     }
 
     /**
@@ -74,8 +74,8 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
     }
 
-    private static List<QCurve> pathToCurves(PathIterator pi) {
-        List<QCurve> curves = new ArrayList<>();
+    private static ExposedArrayWrapper<QCurve> pathToCurves(PathIterator pi) {
+        ExposedArrayWrapper<QCurve> curves = new ExposedArrayWrapper<>(QCurve.class);
         int windingRule = pi.getWindingRule();
         // coords array is big enough for holding:
         //     coordinates returned from currentSegment (6)
@@ -139,7 +139,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         } else {
             operator = new QAreaOp.NZWindOp();
         }
-        return operator.calculate(curves, new ArrayList<>());
+        return operator.calculate(curves, new ExposedArrayWrapper<>(QCurve.class));
     }
 
     /**
@@ -281,7 +281,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public void reset() {
-        curves = new ArrayList<>();
+        curves = new ExposedArrayWrapper<>(QCurve.class);
         invalidateBounds();
     }
 
@@ -292,7 +292,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public boolean isEmpty() {
-        return (curves.size() == 0);
+        return (curves.elementCount == 0);
     }
 
     /**
@@ -304,9 +304,8 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public boolean isPolygonal() {
-        Iterator<QCurve> iter = curves.iterator();
-        while (iter.hasNext()) {
-            if (iter.next().getOrder() > 1) {
+        for (int a = 0; a<curves.elementCount; a++) {
+            if (curves.elementData[a].getOrder() > 1) {
                 return false;
             }
         }
@@ -321,15 +320,15 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public boolean isRectangular() {
-        int size = curves.size();
+        int size = curves.elementCount;
         if (size == 0) {
             return true;
         }
         if (size > 3) {
             return false;
         }
-        QCurve c1 = curves.get(1);
-        QCurve c2 = curves.get(2);
+        QCurve c1 = curves.elementData[1];
+        QCurve c2 = curves.elementData[2];
         if (c1.getOrder() != 1 || c2.getOrder() != 1) {
             return false;
         }
@@ -355,13 +354,11 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @since 1.2
      */
     public boolean isSingular() {
-        if (curves.size() < 3) {
+        if (curves.elementCount < 3) {
             return true;
         }
-        Iterator<QCurve> iter = curves.iterator();
-        iter.next(); // First Order0 "moveto"
-        while(iter.hasNext()) {
-            if (iter.next().getOrder() == 0) {
+        for(int a = 1; a < curves.elementCount; a++) {
+            if (curves.elementData[a].getOrder() == 0) {
                 return false;
             }
         }
@@ -377,12 +374,12 @@ public class QAreaImpl implements QArea<QAreaImpl> {
             return cachedBounds;
         }
         Rectangle2D r = new Rectangle2D.Double();
-        if (curves.size() > 0) {
-            QCurve c = curves.get(0);
+        if (curves.elementCount > 0) {
+            QCurve c = curves.elementData[0];
             // First point is always an order 0 curve (moveto)
             r.setRect(c.getX0(), c.getY0(), 0, 0);
-            for (int i = 1; i < curves.size(); i++) {
-                curves.get(i).enlarge(r);
+            for (int i = 1; i < curves.elementCount; i++) {
+                curves.elementData[i].enlarge(r);
             }
         }
         return (cachedBounds = r);
@@ -454,8 +451,8 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (other == null) {
             return false;
         }
-        List<QCurve> c = new QAreaOp.XorOp().calculate(this.curves, other.curves);
-        return c.isEmpty();
+        ExposedArrayWrapper<QCurve> c = new QAreaOp.XorOp().calculate(this.curves, other.curves);
+        return c.elementCount == 0;
     }
 
     /**
@@ -502,10 +499,9 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (!getCachedBounds().contains(x, y)) {
             return false;
         }
-        Iterator<QCurve> iter = curves.iterator();
         int crossings = 0;
-        while (iter.hasNext()) {
-            QCurve c = iter.next();
+        for(int a = 0; a<curves.elementCount; a++) {
+            QCurve c = curves.elementData[a];
             crossings += c.crossingsFor(x, y);
         }
         return ((crossings & 1) == 1);
@@ -605,16 +601,16 @@ public class QAreaImpl implements QArea<QAreaImpl> {
 
 class QAreaIterator implements PathIterator {
     private AffineTransform transform;
-    private List<QCurve> curves;
+    private ExposedArrayWrapper<QCurve> curves;
     private int index;
     private QCurve prevcurve;
     private QCurve thiscurve;
 
-    public QAreaIterator(List<QCurve> curves, AffineTransform at) {
+    public QAreaIterator(ExposedArrayWrapper<QCurve> curves, AffineTransform at) {
         this.curves = curves;
         this.transform = at;
-        if (curves.size() >= 1) {
-            thiscurve = curves.get(0);
+        if (curves.elementCount >= 1) {
+            thiscurve = curves.elementData[0];
         }
     }
 
@@ -635,8 +631,8 @@ class QAreaIterator implements PathIterator {
         } else {
             prevcurve = thiscurve;
             index++;
-            if (index < curves.size()) {
-                thiscurve = curves.get(index);
+            if (index < curves.elementCount) {
+                thiscurve = curves.elementData[index];
                 if (thiscurve.getOrder() != 0 &&
                         prevcurve.getX1() == thiscurve.getX0() &&
                         prevcurve.getY1() == thiscurve.getY0())

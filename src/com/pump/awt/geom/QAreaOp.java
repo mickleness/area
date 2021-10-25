@@ -151,26 +151,23 @@ public abstract class QAreaOp {
 
     public abstract int getState();
 
-    public List<QCurve> calculate(List<QCurve> left, List<QCurve> right) {
-        List<QEdge> edges = new ArrayList<>();
+    public ExposedArrayWrapper<QCurve> calculate(ExposedArrayWrapper<QCurve> left, ExposedArrayWrapper<QCurve> right) {
+        ExposedArrayWrapper<QEdge> edges = new ExposedArrayWrapper<>(QEdge.class);
         addEdges(edges, left, QAreaOp.CTAG_LEFT);
         addEdges(edges, right, QAreaOp.CTAG_RIGHT);
-        List<QCurve> curves = pruneEdges(edges);
+        ExposedArrayWrapper<QCurve> curves = pruneEdges(edges);
         if (false) {
             System.out.println("result: ");
-            int numcurves = curves.size();
-            QCurve[] curvelist = curves.toArray(new QCurve[numcurves]);
-            for (int i = 0; i < numcurves; i++) {
-                System.out.println("curvelist["+i+"] = "+curvelist[i]);
+            for (int i = 0; i < curves.elementCount; i++) {
+                System.out.println("curvelist["+i+"] = "+curves.elementData[i]);
             }
         }
         return curves;
     }
 
-    private static void addEdges(List<QEdge> edges, List<QCurve> curves, int curvetag) {
-        Iterator<QCurve> iter = curves.iterator();
-        while (iter.hasNext()) {
-            QCurve c = iter.next();
+    private static void addEdges(ExposedArrayWrapper<QEdge> edges, ExposedArrayWrapper<QCurve> curves, int curvetag) {
+        for(int a = 0; a<curves.elementCount; a++) {
+            QCurve c = curves.elementData[a];
             if (c.getOrder() > 0) {
                 edges.add(new QEdge(c, curvetag));
             }
@@ -194,18 +191,17 @@ public abstract class QAreaOp {
         }
     };
 
-    private List<QCurve> pruneEdges(List<QEdge> edges) {
-        int numedges = edges.size();
+    private ExposedArrayWrapper<QCurve> pruneEdges(ExposedArrayWrapper<QEdge> edges) {
+        int numedges = edges.elementCount;
         if (numedges < 2) {
             // empty list is expected with less than 2 edges
-            return new ArrayList<>();
+            return new ExposedArrayWrapper<>(QCurve.class);
         }
-        QEdge[] edgelist = edges.toArray(new QEdge[numedges]);
-        Arrays.sort(edgelist, YXTopComparator);
+        Arrays.sort(edges.elementData, 0, edges.elementCount, YXTopComparator);
         if (false) {
             System.out.println("pruning: ");
             for (int i = 0; i < numedges; i++) {
-                System.out.println("edgelist["+i+"] = "+edgelist[i]);
+                System.out.println("edgelist["+i+"] = "+edges.elementData[i]);
             }
         }
         QEdge e;
@@ -214,18 +210,18 @@ public abstract class QAreaOp {
         int cur = 0;
         int next = 0;
         double[] yrange = new double[2];
-        List<QCurveLink> subcurves = new ArrayList<>();
-        List<QChainEnd> chains = new ArrayList<>();
-        List<QCurveLink> links = new ArrayList<>();
+        ExposedArrayWrapper<QCurveLink> subcurves = new ExposedArrayWrapper<>(QCurveLink.class);
+        ExposedArrayWrapper<QChainEnd> chains = new ExposedArrayWrapper<>(QChainEnd.class);
+        ExposedArrayWrapper<QCurveLink> links = new ExposedArrayWrapper<>(QCurveLink.class);
         // Active edges are between left (inclusive) and right (exclusive)
         while (left < numedges) {
             double y = yrange[0];
             // Prune active edges that fall off the top of the active y range
             for (cur = next = right - 1; cur >= left; cur--) {
-                e = edgelist[cur];
+                e = edges.elementData[cur];
                 if (e.getCurve().getYBot() > y) {
                     if (next > cur) {
-                        edgelist[next] = e;
+                        edges.elementData[next] = e;
                     }
                     next--;
                 }
@@ -236,7 +232,7 @@ public abstract class QAreaOp {
                 if (right >= numedges) {
                     break;
                 }
-                y = edgelist[right].getCurve().getYTop();
+                y = edges.elementData[right].getCurve().getYTop();
                 if (y > yrange[0]) {
                     finalizeSubCurves(subcurves, chains);
                 }
@@ -244,7 +240,7 @@ public abstract class QAreaOp {
             }
             // Incorporate new active edges that enter the active y range
             while (right < numedges) {
-                e = edgelist[right];
+                e = edges.elementData[right];
                 if (e.getCurve().getYTop() > y) {
                     break;
                 }
@@ -253,9 +249,9 @@ public abstract class QAreaOp {
             // Sort the current active edges by their X values and
             // determine the maximum valid Y range where the X ordering
             // is correct
-            yrange[1] = edgelist[left].getCurve().getYBot();
+            yrange[1] = edges.elementData[left].getCurve().getYBot();
             if (right < numedges) {
-                y = edgelist[right].getCurve().getYTop();
+                y = edges.elementData[right].getCurve().getYTop();
                 if (yrange[1] > y) {
                     yrange[1] = y;
                 }
@@ -264,17 +260,17 @@ public abstract class QAreaOp {
                 System.out.println("current line: y = ["+
                         yrange[0]+", "+yrange[1]+"]");
                 for (cur = left; cur < right; cur++) {
-                    System.out.println("  "+edgelist[cur]);
+                    System.out.println("  "+edges.elementData[cur]);
                 }
             }
             // Note: We could start at left+1, but we need to make
             // sure that edgelist[left] has its equivalence set to 0.
             int nexteq = 1;
             for (cur = left; cur < right; cur++) {
-                e = edgelist[cur];
+                e = edges.elementData[cur];
                 e.setEquivalence(0);
                 for (next = cur; next > left; next--) {
-                    QEdge prevedge = edgelist[next-1];
+                    QEdge prevedge = edges.elementData[next-1];
                     int ordering = e.compareTo(prevedge, yrange);
                     if (yrange[1] <= yrange[0]) {
                         throw new InternalError("backstepping to "+yrange[1]+
@@ -295,15 +291,15 @@ public abstract class QAreaOp {
                         }
                         break;
                     }
-                    edgelist[next] = prevedge;
+                    edges.elementData[next] = prevedge;
                 }
-                edgelist[next] = e;
+                edges.elementData[next] = e;
             }
             if (false) {
                 System.out.println("current sorted line: y = ["+
                         yrange[0]+", "+yrange[1]+"]");
                 for (cur = left; cur < right; cur++) {
-                    System.out.println("  "+edgelist[cur]);
+                    System.out.println("  "+edges.elementData[cur]);
                 }
             }
             // Now prune the active edge list.
@@ -315,7 +311,7 @@ public abstract class QAreaOp {
             double ystart = yrange[0];
             double yend = yrange[1];
             for (cur = left; cur < right; cur++) {
-                e = edgelist[cur];
+                e = edges.elementData[cur];
                 int etag;
                 int eq = e.getEquivalence();
                 if (eq != 0) {
@@ -346,7 +342,7 @@ public abstract class QAreaOp {
                             furthesty = y;
                         }
                     } while (++cur < right &&
-                            (e = edgelist[cur]).getEquivalence() == eq);
+                            (e = edges.elementData[cur]).getEquivalence() == eq);
                     --cur;
                     if (getState() == origstate) {
                         etag = QAreaOp.ETAG_IGNORE;
@@ -365,16 +361,16 @@ public abstract class QAreaOp {
             if (getState() != QAreaOp.RSTAG_OUTSIDE) {
                 System.out.println("Still inside at end of active edge list!");
                 System.out.println("num curves = "+(right-left));
-                System.out.println("num links = "+links.size());
+                System.out.println("num links = "+links.elementCount);
                 System.out.println("y top = "+yrange[0]);
                 if (right < numedges) {
                     System.out.println("y top of next curve = "+
-                            edgelist[right].getCurve().getYTop());
+                            edges.elementData[right].getCurve().getYTop());
                 } else {
                     System.out.println("no more curves");
                 }
                 for (cur = left; cur < right; cur++) {
-                    e = edgelist[cur];
+                    e = edges.elementData[cur];
                     System.out.println(e);
                     int eq = e.getEquivalence();
                     if (eq != 0) {
@@ -384,8 +380,8 @@ public abstract class QAreaOp {
             }
             if (false) {
                 System.out.println("new links:");
-                for (int i = 0; i < links.size(); i++) {
-                    QCurveLink link = links.get(i);
+                for (int i = 0; i < links.elementCount; i++) {
+                    QCurveLink link = links.elementData[i];
                     System.out.println("  "+link.getSubCurve());
                 }
             }
@@ -396,10 +392,9 @@ public abstract class QAreaOp {
             yrange[0] = yend;
         }
         finalizeSubCurves(subcurves, chains);
-        List<QCurve> ret = new ArrayList<>();
-        Iterator<QCurveLink> iter = subcurves.iterator();
-        while (iter.hasNext()) {
-            QCurveLink link = iter.next();
+        ExposedArrayWrapper<QCurve> ret = new ExposedArrayWrapper<>(QCurve.class);
+        for (int a = 0; a<subcurves.elementCount; a++) {
+            QCurveLink link = subcurves.elementData[a];
             ret.add(link.getMoveto());
             QCurveLink nextlink = link;
             while ((nextlink = nextlink.getNext()) != null) {
@@ -413,20 +408,18 @@ public abstract class QAreaOp {
         return ret;
     }
 
-    public static void finalizeSubCurves(List<QCurveLink> subcurves,
-                                         List<QChainEnd> chains) {
-        int numchains = chains.size();
+    public static void finalizeSubCurves(ExposedArrayWrapper<QCurveLink> subcurves,
+                                         ExposedArrayWrapper<QChainEnd> chains) {
+        int numchains = chains.elementCount;
         if (numchains == 0) {
             return;
         }
         if ((numchains & 1) != 0) {
             throw new InternalError("Odd number of chains!");
         }
-        QChainEnd[] endlist = new QChainEnd[numchains];
-        chains.toArray(endlist);
         for (int i = 1; i < numchains; i += 2) {
-            QChainEnd open = endlist[i - 1];
-            QChainEnd close = endlist[i];
+            QChainEnd open = chains.elementData[i - 1];
+            QChainEnd close = chains.elementData[i];
             QCurveLink subcurve = open.linkTo(close);
             if (subcurve != null) {
                 subcurves.add(subcurve);
@@ -438,11 +431,11 @@ public abstract class QAreaOp {
     private static QCurveLink[] EmptyLinkList = new QCurveLink[2];
     private static QChainEnd[] EmptyChainList = new QChainEnd[2];
 
-    public static void resolveLinks(List<QCurveLink> subcurves,
-                                    List<QChainEnd> chains,
-                                    List<QCurveLink> links)
+    public static void resolveLinks(ExposedArrayWrapper<QCurveLink> subcurves,
+                                    ExposedArrayWrapper<QChainEnd> chains,
+                                    ExposedArrayWrapper<QCurveLink> links)
     {
-        int numlinks = links.size();
+        int numlinks = links.elementCount;
         QCurveLink[] linklist;
         if (numlinks == 0) {
             linklist = EmptyLinkList;
@@ -450,10 +443,9 @@ public abstract class QAreaOp {
             if ((numlinks & 1) != 0) {
                 throw new InternalError("Odd number of new curves!");
             }
-            linklist = new QCurveLink[numlinks+2];
-            links.toArray(linklist);
+            linklist = Arrays.copyOf(links.elementData, numlinks + 2);
         }
-        int numchains = chains.size();
+        int numchains = chains.elementCount;
         QChainEnd[] endlist;
         if (numchains == 0) {
             endlist = EmptyChainList;
@@ -461,8 +453,7 @@ public abstract class QAreaOp {
             if ((numchains & 1) != 0) {
                 throw new InternalError("Odd number of chains!");
             }
-            endlist = new QChainEnd[numchains+2];
-            chains.toArray(endlist);
+            endlist = Arrays.copyOf(chains.elementData, numchains+2);
         }
         int curchain = 0;
         int curlink = 0;
@@ -539,7 +530,7 @@ public abstract class QAreaOp {
                 nextlink = linklist[curlink+1];
             }
         }
-        if ((chains.size() & 1) != 0) {
+        if ((chains.elementCount & 1) != 0) {
             System.out.println("Odd number of chains!");
         }
     }
