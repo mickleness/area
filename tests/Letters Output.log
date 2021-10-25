@@ -1,0 +1,25 @@
+This table catalogs the time in ms two different QArea implementations took to do the same work.
+Data:
+LegacyArea Factory	QAreaImpl Factory
+743	731
+737	730
+632	641
+637	643
+781	721
+623	634
+659	657
+689	678
+709	696
+656	640
+634	586
+683	662
+643	661
+676	679
+708	682
+571	627
+648	612
+688	672
+643	614
+654	613
+
+finished

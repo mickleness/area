@@ -1,0 +1,25 @@
+This table catalogs the time in ms two different QArea implementations took to do the same work.
+Data:
+LegacyArea Factory	QAreaImpl Factory
+207	208
+193	192
+219	223
+194	206
+214	205
+202	196
+206	197
+204	204
+184	174
+182	178
+206	199
+238	227
+211	202
+220	211
+195	185
+210	201
+214	204
+203	192
+246	241
+250	181
+
+finished
