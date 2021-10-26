@@ -44,7 +44,7 @@ public abstract class QAreaOp {
 
         @Override
         public int classify(QEdge e) {
-            if (e.getCurveTag() == CTAG_LEFT) {
+            if (e.curveTag == CTAG_LEFT) {
                 inLeft = !inLeft;
             } else {
                 inRight = !inRight;
@@ -108,7 +108,7 @@ public abstract class QAreaOp {
             // assert(e.getCurveTag() == CTAG_LEFT);
             int newCount = count;
             int type = (newCount == 0 ? ETAG_ENTER : ETAG_IGNORE);
-            newCount += e.getCurve().direction;
+            newCount += e.curve.direction;
             count = newCount;
             return (newCount == 0 ? ETAG_EXIT : type);
         }
@@ -189,8 +189,8 @@ public abstract class QAreaOp {
 
     private static Comparator<QEdge> YXTopComparator = new Comparator<QEdge>() {
         public int compare(QEdge o1, QEdge o2) {
-            QCurve c1 = o1.getCurve();
-            QCurve c2 = o2.getCurve();
+            QCurve c1 = o1.curve;
+            QCurve c2 = o2.curve;
             double v1, v2;
             if ((v1 = c1.y0) == (v2 = c2.y0)) {
                 if ((v1 = c1.x0) == (v2 = c2.x0)) {
@@ -232,7 +232,7 @@ public abstract class QAreaOp {
             // Prune active edges that fall off the top of the active y range
             for (cur = next = right - 1; cur >= left; cur--) {
                 e = edges.elementData[cur];
-                if (e.getCurve().y1 > y) {
+                if (e.curve.y1 > y) {
                     if (next > cur) {
                         edges.elementData[next] = e;
                     }
@@ -245,7 +245,7 @@ public abstract class QAreaOp {
                 if (right >= numedges) {
                     break;
                 }
-                y = edges.elementData[right].getCurve().y0;
+                y = edges.elementData[right].curve.y0;
                 if (y > yrange[0]) {
                     finalizeSubCurves(subcurves, chains);
                 }
@@ -254,7 +254,7 @@ public abstract class QAreaOp {
             // Incorporate new active edges that enter the active y range
             while (right < numedges) {
                 e = edges.elementData[right];
-                if (e.getCurve().y0 > y) {
+                if (e.curve.y0 > y) {
                     break;
                 }
                 right++;
@@ -262,9 +262,9 @@ public abstract class QAreaOp {
             // Sort the current active edges by their X values and
             // determine the maximum valid Y range where the X ordering
             // is correct
-            yrange[1] = edges.elementData[left].getCurve().y1;
+            yrange[1] = edges.elementData[left].curve.y1;
             if (right < numedges) {
-                y = edges.elementData[right].getCurve().y0;
+                y = edges.elementData[right].curve.y0;
                 if (yrange[1] > y) {
                     yrange[1] = y;
                 }
@@ -349,7 +349,7 @@ public abstract class QAreaOp {
                         {
                             activematch = e;
                         }
-                        y = e.getCurve().y1;
+                        y = e.curve.y1;
                         if (y > furthesty) {
                             longestmatch = e;
                             furthesty = y;
@@ -367,7 +367,7 @@ public abstract class QAreaOp {
                 }
                 if (etag != QAreaOp.ETAG_IGNORE) {
                     e.record(yend, etag);
-                    links.add(new QCurveLink(e.getCurve(), ystart, yend, etag));
+                    links.add(new QCurveLink(e.curve, ystart, yend, etag));
                 }
             }
             // assert(getState() == AreaOp.RSTAG_OUTSIDE);
@@ -378,7 +378,7 @@ public abstract class QAreaOp {
                 System.out.println("y top = "+yrange[0]);
                 if (right < numedges) {
                     System.out.println("y top of next curve = "+
-                            edges.elementData[right].getCurve().y0);
+                            edges.elementData[right].curve.y0);
                 } else {
                     System.out.println("no more curves");
                 }
@@ -410,7 +410,7 @@ public abstract class QAreaOp {
             QCurveLink link = subcurves.elementData[a];
             ret.add(link.getMoveto());
             QCurveLink nextlink = link;
-            while ((nextlink = nextlink.getNext()) != null) {
+            while ((nextlink = nextlink.next) != null) {
                 if (!link.absorb(nextlink)) {
                     ret.add(link.getSubCurve());
                     link = nextlink;

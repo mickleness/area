@@ -27,12 +27,12 @@
 package com.pump.awt.geom;
 
 final class QCurveLink {
-    QCurve curve;
-    double ytop;
-    double ybot;
-    int etag;
+    public final QCurve curve;
+    public final int etag;
+    public QCurveLink next;
 
-    QCurveLink next;
+    private double ytop;
+    private double ybot;
 
     public QCurveLink(QCurve curve, double ystart, double yend, int etag) {
         this.curve = curve;
@@ -66,10 +66,6 @@ final class QCurveLink {
         return (ytop == ybot);
     }
 
-    public QCurve getCurve() {
-        return curve;
-    }
-
     public QCurve getSubCurve() {
         if (ytop == curve.y0 && ybot == curve.y1) {
             return curve.getWithDirection(etag);
@@ -99,17 +95,5 @@ final class QCurveLink {
 
     public double getX() {
         return curve.XforY(ytop);
-    }
-
-    public int getEdgeTag() {
-        return etag;
-    }
-
-    public void setNext(QCurveLink link) {
-        this.next = link;
-    }
-
-    public QCurveLink getNext() {
-        return next;
     }
 }

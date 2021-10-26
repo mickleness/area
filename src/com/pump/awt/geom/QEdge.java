@@ -31,36 +31,20 @@ final class QEdge {
     static final int INIT_PARTS = 4;
     static final int GROW_PARTS = 10;
 
-    QCurve curve;
-    int ctag;
-    int etag;
+    public final QCurve curve;
+    public final int curveTag;
+    public int edgeTag;
     double activey;
     int equivalence;
 
-    public QEdge(QCurve c, int ctag) {
-        this(c, ctag, QAreaOp.ETAG_IGNORE);
+    public QEdge(QCurve c, int curveTag) {
+        this(c, curveTag, QAreaOp.ETAG_IGNORE);
     }
 
-    public QEdge(QCurve c, int ctag, int etag) {
+    public QEdge(QCurve c, int curveTag, int edgeTag) {
         this.curve = c;
-        this.ctag = ctag;
-        this.etag = etag;
-    }
-
-    public QCurve getCurve() {
-        return curve;
-    }
-
-    public int getCurveTag() {
-        return ctag;
-    }
-
-    public int getEdgeTag() {
-        return etag;
-    }
-
-    public void setEdgeTag(int etag) {
-        this.etag = etag;
+        this.curveTag = curveTag;
+        this.edgeTag = edgeTag;
     }
 
     public int getEquivalence() {
@@ -106,22 +90,22 @@ final class QEdge {
         return ret;
     }
 
-    public void record(double yend, int etag) {
+    public void record(double yend, int edgeTag) {
         this.activey = yend;
-        this.etag = etag;
+        this.edgeTag = edgeTag;
     }
 
-    public boolean isActiveFor(double y, int etag) {
-        return (this.etag == etag && this.activey >= y);
+    public boolean isActiveFor(double y, int edgeTag) {
+        return (this.edgeTag == edgeTag && this.activey >= y);
     }
 
     public String toString() {
         return ("QEdge["+curve+
                 ", "+
-                (ctag == QAreaOp.CTAG_LEFT ? "L" : "R")+
+                (curveTag == QAreaOp.CTAG_LEFT ? "L" : "R")+
                 ", "+
-                (etag == QAreaOp.ETAG_ENTER ? "I" :
-                        (etag == QAreaOp.ETAG_EXIT ? "O" : "N"))+
+                (edgeTag == QAreaOp.ETAG_ENTER ? "I" :
+                        (edgeTag == QAreaOp.ETAG_EXIT ? "O" : "N"))+
                 "]");
     }
 }

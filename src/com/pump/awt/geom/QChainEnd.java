@@ -37,7 +37,7 @@ final class QChainEnd {
         this.head = first;
         this.tail = first;
         this.partner = partner;
-        this.etag = first.getEdgeTag();
+        this.etag = first.etag;
     }
 
     public QCurveLink getChain() {
@@ -78,7 +78,7 @@ final class QChainEnd {
         etag = QAreaOp.ETAG_IGNORE;
         that.etag = QAreaOp.ETAG_IGNORE;
         // Now link everything up...
-        enter.tail.setNext(exit.head);
+        enter.tail.next = exit.head;
         enter.tail = exit.tail;
         if (partner == that) {
             // Curve has closed on itself...
@@ -90,10 +90,10 @@ final class QChainEnd {
         otherenter.partner = otherexit;
         otherexit.partner = otherenter;
         if (enter.head.getYTop() < otherenter.head.getYTop()) {
-            enter.tail.setNext(otherenter.head);
+            enter.tail.next = otherenter.head;
             otherenter.head = enter.head;
         } else {
-            otherexit.tail.setNext(enter.head);
+            otherexit.tail.next = enter.head;
             otherexit.tail = enter.tail;
         }
         return null;
@@ -101,10 +101,10 @@ final class QChainEnd {
 
     public void addLink(QCurveLink newlink) {
         if (etag == QAreaOp.ETAG_ENTER) {
-            tail.setNext(newlink);
+            tail.next = newlink;
             tail = newlink;
         } else {
-            newlink.setNext(head);
+            newlink.next = head;
             head = newlink;
         }
     }
