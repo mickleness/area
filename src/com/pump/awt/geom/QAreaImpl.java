@@ -170,6 +170,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @throws NullPointerException if {@code rhs} is null
      * @since 1.2
      */
+    @Override
     public void add(QAreaImpl rhs) {
         curves = new QAreaOp.AddOp().calculate(this.curves, rhs.curves);
         invalidateBounds();
@@ -203,6 +204,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @throws NullPointerException if {@code rhs} is null
      * @since 1.2
      */
+    @Override
     public void subtract(QAreaImpl rhs) {
         curves = new QAreaOp.SubOp().calculate(this.curves, rhs.curves);
         invalidateBounds();
@@ -236,6 +238,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @throws NullPointerException if {@code rhs} is null
      * @since 1.2
      */
+    @Override
     public void intersect(QAreaImpl rhs) {
         curves = new QAreaOp.IntOp().calculate(this.curves, rhs.curves);
         invalidateBounds();
@@ -270,6 +273,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @throws NullPointerException if {@code rhs} is null
      * @since 1.2
      */
+    @Override
     public void exclusiveOr(QAreaImpl rhs) {
         curves = new QAreaOp.XorOp().calculate(this.curves, rhs.curves);
         invalidateBounds();
@@ -280,6 +284,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * restores it to an empty area.
      * @since 1.2
      */
+    @Override
     public void reset() {
         curves = new ExposedArrayWrapper<>(QCurve.class);
         invalidateBounds();
@@ -291,6 +296,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * represents an empty area; {@code false} otherwise.
      * @since 1.2
      */
+    @Override
     public boolean isEmpty() {
         return (curves.elementCount == 0);
     }
@@ -303,6 +309,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@code false} otherwise.
      * @since 1.2
      */
+    @Override
     public boolean isPolygonal() {
         for (int a = 0; a<curves.elementCount; a++) {
             if (curves.elementData[a].getOrder() > 1) {
@@ -319,6 +326,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * otherwise.
      * @since 1.2
      */
+    @Override
     public boolean isRectangular() {
         int size = curves.elementCount;
         if (size == 0) {
@@ -353,6 +361,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * of a single basic geometry; {@code false} otherwise.
      * @since 1.2
      */
+    @Override
     public boolean isSingular() {
         if (curves.elementCount < 3) {
             return true;
@@ -398,6 +407,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@code Area}.
      * @since 1.2
      */
+    @Override
     public Rectangle2D getBounds2D() {
         return getCachedBounds().getBounds2D();
     }
@@ -418,6 +428,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@code Area}.
      * @since 1.2
      */
+    @Override
     public Rectangle getBounds() {
         return getCachedBounds().getBounds();
     }
@@ -427,6 +438,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @return    Created clone object
      * @since 1.2
      */
+    @Override
     public Object clone() {
         return new QAreaImpl(this);
     }
@@ -441,6 +453,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      *          {@code false} otherwise.
      * @since 1.2
      */
+    @Override
     public boolean isEqual(QAreaImpl other) {
         // REMIND: A *much* simpler operation should be possible...
         // Should be able to do a curve-wise comparison since all Areas
@@ -463,6 +476,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * @throws NullPointerException if {@code t} is null
      * @since 1.2
      */
+    @Override
     public void transform(AffineTransform t) {
         if (t == null) {
             throw new NullPointerException("transform must not be null");
@@ -495,6 +509,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean contains(double x, double y) {
         if (!getCachedBounds().contains(x, y)) {
             return false;
@@ -511,6 +526,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean contains(Point2D p) {
         return contains(p.getX(), p.getY());
     }
@@ -519,6 +535,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean contains(double x, double y, double w, double h) {
         if (w < 0 || h < 0) {
             return false;
@@ -534,6 +551,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean contains(Rectangle2D r) {
         return contains(r.getX(), r.getY(), r.getWidth(), r.getHeight());
     }
@@ -542,6 +560,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean intersects(double x, double y, double w, double h) {
         if (w < 0 || h < 0) {
             return false;
@@ -557,6 +576,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * {@inheritDoc}
      * @since 1.2
      */
+    @Override
     public boolean intersects(Rectangle2D r) {
         return intersects(r.getX(), r.getY(), r.getWidth(), r.getHeight());
     }
@@ -572,6 +592,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      *          segment at a time.
      * @since 1.2
      */
+    @Override
     public PathIterator getPathIterator(AffineTransform at) {
         return new QAreaIterator(curves, at);
     }
@@ -594,6 +615,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      * at a time.
      * @since 1.2
      */
+    @Override
     public PathIterator getPathIterator(AffineTransform at, double flatness) {
         return new FlatteningPathIterator(getPathIterator(at), flatness);
     }
@@ -614,6 +636,7 @@ class QAreaIterator implements PathIterator {
         }
     }
 
+    @Override
     public int getWindingRule() {
         // REMIND: Which is better, EVEN_ODD or NON_ZERO?
         //         The paths calculated could be classified either way.
@@ -621,10 +644,12 @@ class QAreaIterator implements PathIterator {
         return WIND_NON_ZERO;
     }
 
+    @Override
     public boolean isDone() {
         return (prevcurve == null && thiscurve == null);
     }
 
+    @Override
     public void next() {
         if (prevcurve != null) {
             prevcurve = null;
@@ -645,6 +670,7 @@ class QAreaIterator implements PathIterator {
         }
     }
 
+    @Override
     public int currentSegment(float[] coords) {
         double[] dcoords = new double[6];
         int segtype = currentSegment(dcoords);
@@ -658,6 +684,7 @@ class QAreaIterator implements PathIterator {
         return segtype;
     }
 
+    @Override
     public int currentSegment(double[] coords) {
         int segtype;
         int numpoints;

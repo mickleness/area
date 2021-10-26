@@ -10,6 +10,7 @@ public interface QArea<T> extends Shape {
     void add(T shape);
     void subtract(T shape);
     void exclusiveOr(T shape);
+    void intersect(T shape);
     boolean isEqual(T shape);
     void reset();
     boolean isEmpty();

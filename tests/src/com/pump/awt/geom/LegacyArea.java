@@ -43,6 +43,11 @@ public class LegacyArea implements QArea<LegacyArea> {
     }
 
     @Override
+    public void intersect(LegacyArea shape) {
+        delegate.intersect(shape.delegate);
+    }
+
+    @Override
     public boolean isEqual(LegacyArea shape) {
         return delegate.equals(shape.delegate);
     }

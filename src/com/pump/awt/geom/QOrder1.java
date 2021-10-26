@@ -56,50 +56,62 @@ final class QOrder1 extends QCurve {
         }
     }
 
+    @Override
     public int getOrder() {
         return 1;
     }
 
+    @Override
     public double getXTop() {
         return x0;
     }
 
+    @Override
     public double getYTop() {
         return y0;
     }
 
+    @Override
     public double getXBot() {
         return x1;
     }
 
+    @Override
     public double getYBot() {
         return y1;
     }
 
+    @Override
     public double getXMin() {
         return xmin;
     }
 
+    @Override
     public double getXMax() {
         return xmax;
     }
 
+    @Override
     public double getX0() {
         return (direction == INCREASING) ? x0 : x1;
     }
 
+    @Override
     public double getY0() {
         return (direction == INCREASING) ? y0 : y1;
     }
 
+    @Override
     public double getX1() {
         return (direction == DECREASING) ? x0 : x1;
     }
 
+    @Override
     public double getY1() {
         return (direction == DECREASING) ? y0 : y1;
     }
 
+    @Override
     public double XforY(double y) {
         if (x0 == x1 || y <= y0) {
             return x0;
@@ -111,6 +123,7 @@ final class QOrder1 extends QCurve {
         return (x0 + (y - y0) * (x1 - x0) / (y1 - y0));
     }
 
+    @Override
     public double TforY(double y) {
         if (y <= y0) {
             return 0;
@@ -121,14 +134,17 @@ final class QOrder1 extends QCurve {
         return (y - y0) / (y1 - y0);
     }
 
+    @Override
     public double XforT(double t) {
         return x0 + t * (x1 - x0);
     }
 
+    @Override
     public double YforT(double t) {
         return y0 + t * (y1 - y0);
     }
 
+    @Override
     public double dXforT(double t, int deriv) {
         switch (deriv) {
             case 0:
@@ -140,6 +156,7 @@ final class QOrder1 extends QCurve {
         }
     }
 
+    @Override
     public double dYforT(double t, int deriv) {
         switch (deriv) {
             case 0:
@@ -151,10 +168,12 @@ final class QOrder1 extends QCurve {
         }
     }
 
+    @Override
     public double nextVertical(double t0, double t1) {
         return t1;
     }
 
+    @Override
     public boolean accumulateCrossings(QCrossings c) {
         double xlo = c.getXLo();
         double ylo = c.getYLo();
@@ -194,11 +213,13 @@ final class QOrder1 extends QCurve {
         return false;
     }
 
+    @Override
     public void enlarge(Rectangle2D r) {
         r.add(x0, y0);
         r.add(x1, y1);
     }
 
+    @Override
     public QCurve getSubCurve(double ystart, double yend, int dir) {
         if (ystart == y0 && yend == y1) {
             return getWithDirection(dir);
@@ -213,10 +234,12 @@ final class QOrder1 extends QCurve {
         return new QOrder1(xstart, ystart, xend, yend, dir);
     }
 
+    @Override
     public QCurve getReversedCurve() {
         return new QOrder1(x0, y0, x1, y1, -direction);
     }
 
+    @Override
     public int compareTo(QCurve other, double[] yrange) {
         if (!(other instanceof QOrder1)) {
             return super.compareTo(other, yrange);
@@ -300,6 +323,7 @@ final class QOrder1 extends QCurve {
         return orderof(XforY(y), c1.XforY(y));
     }
 
+    @Override
     public int getSegment(double[] coords) {
         if (direction == INCREASING) {
             coords[0] = x1;

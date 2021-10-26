@@ -396,6 +396,7 @@ public abstract class QCrossings {
             crosscounts = new int[yranges.length / 2];
         }
 
+        @Override
         public boolean covers(double ystart, double yend) {
             int i = 0;
             while (i < limit) {
@@ -415,7 +416,7 @@ public abstract class QCrossings {
             return (ystart >= yend);
         }
 
-        public void remove(int cur) {
+        private void remove(int cur) {
             limit -= 2;
             int rem = limit - cur;
             if (rem > 0) {
@@ -426,7 +427,7 @@ public abstract class QCrossings {
             }
         }
 
-        public void insert(int cur, double lo, double hi, int dir) {
+        private void insert(int cur, double lo, double hi, int dir) {
             int rem = limit - cur;
             double[] oldranges = yranges;
             int[] oldcounts = crosscounts;
@@ -448,6 +449,7 @@ public abstract class QCrossings {
             limit += 2;
         }
 
+        @Override
         public void record(double ystart, double yend, int direction) {
             if (ystart >= yend) {
                 return;

@@ -35,12 +35,14 @@ public abstract class QAreaOp {
         boolean inRight;
         boolean inResult;
 
+        @Override
         public void newRow() {
             inLeft = false;
             inRight = false;
             inResult = false;
         }
 
+        @Override
         public int classify(QEdge e) {
             if (e.getCurveTag() == CTAG_LEFT) {
                 inLeft = !inLeft;
@@ -55,6 +57,7 @@ public abstract class QAreaOp {
             return (newClass ? ETAG_ENTER : ETAG_EXIT);
         }
 
+        @Override
         public int getState() {
             return (inResult ? RSTAG_INSIDE : RSTAG_OUTSIDE);
         }
@@ -64,24 +67,28 @@ public abstract class QAreaOp {
     }
 
     public static class AddOp extends CAGOp {
+        @Override
         public boolean newClassification(boolean inLeft, boolean inRight) {
             return (inLeft || inRight);
         }
     }
 
     public static class SubOp extends CAGOp {
+        @Override
         public boolean newClassification(boolean inLeft, boolean inRight) {
             return (inLeft && !inRight);
         }
     }
 
     public static class IntOp extends CAGOp {
+        @Override
         public boolean newClassification(boolean inLeft, boolean inRight) {
             return (inLeft && inRight);
         }
     }
 
     public static class XorOp extends CAGOp {
+        @Override
         public boolean newClassification(boolean inLeft, boolean inRight) {
             return (inLeft != inRight);
         }
@@ -90,10 +97,12 @@ public abstract class QAreaOp {
     public static class NZWindOp extends QAreaOp {
         private int count;
 
+        @Override
         public void newRow() {
             count = 0;
         }
 
+        @Override
         public int classify(QEdge e) {
             // Note: the right curves should be an empty set with this op...
             // assert(e.getCurveTag() == CTAG_LEFT);
@@ -104,6 +113,7 @@ public abstract class QAreaOp {
             return (newCount == 0 ? ETAG_EXIT : type);
         }
 
+        @Override
         public int getState() {
             return ((count == 0) ? RSTAG_OUTSIDE : RSTAG_INSIDE);
         }
@@ -112,10 +122,12 @@ public abstract class QAreaOp {
     public static class EOWindOp extends QAreaOp {
         private boolean inside;
 
+        @Override
         public void newRow() {
             inside = false;
         }
 
+        @Override
         public int classify(QEdge e) {
             // Note: the right curves should be an empty set with this op...
             // assert(e.getCurveTag() == CTAG_LEFT);
@@ -124,6 +136,7 @@ public abstract class QAreaOp {
             return (newInside ? ETAG_ENTER : ETAG_EXIT);
         }
 
+        @Override
         public int getState() {
             return (inside ? RSTAG_INSIDE : RSTAG_OUTSIDE);
         }

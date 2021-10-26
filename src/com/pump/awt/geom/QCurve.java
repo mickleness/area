@@ -755,7 +755,7 @@ public abstract class QCurve {
     }
 
     public String toString() {
-        return ("Curve["+
+        return ("QCurve["+
                 getOrder()+", "+
                 ("("+round(getX0())+", "+round(getY0())+"), ")+
                 controlPointString()+

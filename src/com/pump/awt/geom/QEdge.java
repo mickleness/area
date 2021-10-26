@@ -116,7 +116,7 @@ final class QEdge {
     }
 
     public String toString() {
-        return ("Edge["+curve+
+        return ("QEdge["+curve+
                 ", "+
                 (ctag == QAreaOp.CTAG_LEFT ? "L" : "R")+
                 ", "+
