@@ -30,7 +30,6 @@ package com.pump.awt.geom;
 import java.awt.*;
 import java.awt.geom.*;
 import java.util.*;
-import java.util.List;
 
 public class QAreaImpl implements QArea<QAreaImpl> {
 
@@ -312,7 +311,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
     @Override
     public boolean isPolygonal() {
         for (int a = 0; a<curves.elementCount; a++) {
-            if (curves.elementData[a].getOrder() > 1) {
+            if (curves.elementData[a].order > 1) {
                 return false;
             }
         }
@@ -337,13 +336,13 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
         QCurve c1 = curves.elementData[1];
         QCurve c2 = curves.elementData[2];
-        if (c1.getOrder() != 1 || c2.getOrder() != 1) {
+        if (c1.order != 1 || c2.order != 1) {
             return false;
         }
-        if (c1.getXTop() != c1.getXBot() || c2.getXTop() != c2.getXBot()) {
+        if (c1.x0 != c1.x1 || c2.x0 != c2.x1) {
             return false;
         }
-        if (c1.getYTop() != c2.getYTop() || c1.getYBot() != c2.getYBot()) {
+        if (c1.y0 != c2.y0 || c1.y1 != c2.y1) {
             // One might be able to prove that this is impossible...
             return false;
         }
@@ -367,7 +366,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
             return true;
         }
         for(int a = 1; a < curves.elementCount; a++) {
-            if (curves.elementData[a].getOrder() == 0) {
+            if (curves.elementData[a].order == 0) {
                 return false;
             }
         }
@@ -658,7 +657,7 @@ class QAreaIterator implements PathIterator {
             index++;
             if (index < curves.elementCount) {
                 thiscurve = curves.elementData[index];
-                if (thiscurve.getOrder() != 0 &&
+                if (thiscurve.order != 0 &&
                         prevcurve.getX1() == thiscurve.getX0() &&
                         prevcurve.getY1() == thiscurve.getY0())
                 {
@@ -690,7 +689,7 @@ class QAreaIterator implements PathIterator {
         int numpoints;
         if (prevcurve != null) {
             // Need to finish off junction between curves
-            if (thiscurve == null || thiscurve.getOrder() == 0) {
+            if (thiscurve == null || thiscurve.order == 0) {
                 return SEG_CLOSE;
             }
             coords[0] = thiscurve.getX0();
@@ -701,7 +700,7 @@ class QAreaIterator implements PathIterator {
             throw new NoSuchElementException("area iterator out of bounds");
         } else {
             segtype = thiscurve.getSegment(coords);
-            numpoints = thiscurve.getOrder();
+            numpoints = thiscurve.order;
             if (numpoints == 0) {
                 numpoints = 1;
             }

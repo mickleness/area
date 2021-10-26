@@ -108,7 +108,7 @@ public abstract class QAreaOp {
             // assert(e.getCurveTag() == CTAG_LEFT);
             int newCount = count;
             int type = (newCount == 0 ? ETAG_ENTER : ETAG_IGNORE);
-            newCount += e.getCurve().getDirection();
+            newCount += e.getCurve().direction;
             count = newCount;
             return (newCount == 0 ? ETAG_EXIT : type);
         }
@@ -181,7 +181,7 @@ public abstract class QAreaOp {
     private static void addEdges(ExposedArrayWrapper<QEdge> edges, ExposedArrayWrapper<QCurve> curves, int curvetag) {
         for(int a = 0; a<curves.elementCount; a++) {
             QCurve c = curves.elementData[a];
-            if (c.getOrder() > 0) {
+            if (c.order > 0) {
                 edges.add(new QEdge(c, curvetag));
             }
         }
@@ -192,8 +192,8 @@ public abstract class QAreaOp {
             QCurve c1 = o1.getCurve();
             QCurve c2 = o2.getCurve();
             double v1, v2;
-            if ((v1 = c1.getYTop()) == (v2 = c2.getYTop())) {
-                if ((v1 = c1.getXTop()) == (v2 = c2.getXTop())) {
+            if ((v1 = c1.y0) == (v2 = c2.y0)) {
+                if ((v1 = c1.x0) == (v2 = c2.x0)) {
                     return 0;
                 }
             }
@@ -232,7 +232,7 @@ public abstract class QAreaOp {
             // Prune active edges that fall off the top of the active y range
             for (cur = next = right - 1; cur >= left; cur--) {
                 e = edges.elementData[cur];
-                if (e.getCurve().getYBot() > y) {
+                if (e.getCurve().y1 > y) {
                     if (next > cur) {
                         edges.elementData[next] = e;
                     }
@@ -245,7 +245,7 @@ public abstract class QAreaOp {
                 if (right >= numedges) {
                     break;
                 }
-                y = edges.elementData[right].getCurve().getYTop();
+                y = edges.elementData[right].getCurve().y0;
                 if (y > yrange[0]) {
                     finalizeSubCurves(subcurves, chains);
                 }
@@ -254,7 +254,7 @@ public abstract class QAreaOp {
             // Incorporate new active edges that enter the active y range
             while (right < numedges) {
                 e = edges.elementData[right];
-                if (e.getCurve().getYTop() > y) {
+                if (e.getCurve().y0 > y) {
                     break;
                 }
                 right++;
@@ -262,9 +262,9 @@ public abstract class QAreaOp {
             // Sort the current active edges by their X values and
             // determine the maximum valid Y range where the X ordering
             // is correct
-            yrange[1] = edges.elementData[left].getCurve().getYBot();
+            yrange[1] = edges.elementData[left].getCurve().y1;
             if (right < numedges) {
-                y = edges.elementData[right].getCurve().getYTop();
+                y = edges.elementData[right].getCurve().y0;
                 if (yrange[1] > y) {
                     yrange[1] = y;
                 }
@@ -349,7 +349,7 @@ public abstract class QAreaOp {
                         {
                             activematch = e;
                         }
-                        y = e.getCurve().getYBot();
+                        y = e.getCurve().y1;
                         if (y > furthesty) {
                             longestmatch = e;
                             furthesty = y;
@@ -378,7 +378,7 @@ public abstract class QAreaOp {
                 System.out.println("y top = "+yrange[0]);
                 if (right < numedges) {
                     System.out.println("y top of next curve = "+
-                            edges.elementData[right].getCurve().getYTop());
+                            edges.elementData[right].getCurve().y0);
                 } else {
                     System.out.println("no more curves");
                 }

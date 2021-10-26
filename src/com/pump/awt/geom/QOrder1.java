@@ -31,64 +31,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
 
 final class QOrder1 extends QCurve {
-    private double x0;
-    private double y0;
-    private double x1;
-    private double y1;
-    private double xmin;
-    private double xmax;
 
     public QOrder1(double x0, double y0,
                   double x1, double y1,
                   int direction)
     {
-        super(direction);
-        this.x0 = x0;
-        this.y0 = y0;
-        this.x1 = x1;
-        this.y1 = y1;
-        if (x0 < x1) {
-            this.xmin = x0;
-            this.xmax = x1;
-        } else {
-            this.xmin = x1;
-            this.xmax = x0;
-        }
-    }
-
-    @Override
-    public int getOrder() {
-        return 1;
-    }
-
-    @Override
-    public double getXTop() {
-        return x0;
-    }
-
-    @Override
-    public double getYTop() {
-        return y0;
-    }
-
-    @Override
-    public double getXBot() {
-        return x1;
-    }
-
-    @Override
-    public double getYBot() {
-        return y1;
-    }
-
-    @Override
-    public double getXMin() {
-        return xmin;
-    }
-
-    @Override
-    public double getXMax() {
-        return xmax;
+        super(1, direction, x0, y0, x1, y1);
     }
 
     @Override

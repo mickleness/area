@@ -29,17 +29,10 @@ package com.pump.awt.geom;
 
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
-import java.awt.geom.QuadCurve2D;
 
 final class QOrder2 extends QCurve {
-    private double x0;
-    private double y0;
     private double cx0;
     private double cy0;
-    private double x1;
-    private double y1;
-    private double xmin;
-    private double xmax;
 
     private double xcoeff0;
     private double xcoeff1;
@@ -163,7 +156,9 @@ final class QOrder2 extends QCurve {
                   double x1, double y1,
                   int direction)
     {
-        super(direction);
+        super(2, direction, x0, y0, x1, y1,
+                Math.min(x0, Math.min(x1, cx0)),
+                Math.max(x0, Math.max(x1, cx0)) );
         // REMIND: Better accuracy in the root finding methods would
         //  ensure that cy0 is in range.  As it stands, it is never
         //  more than "1 mantissa bit" out of range...
@@ -172,55 +167,14 @@ final class QOrder2 extends QCurve {
         } else if (cy0 > y1) {
             cy0 = y1;
         }
-        this.x0 = x0;
-        this.y0 = y0;
         this.cx0 = cx0;
         this.cy0 = cy0;
-        this.x1 = x1;
-        this.y1 = y1;
-        xmin = Math.min(Math.min(x0, x1), cx0);
-        xmax = Math.max(Math.max(x0, x1), cx0);
         xcoeff0 = x0;
         xcoeff1 = cx0 + cx0 - x0 - x0;
         xcoeff2 = x0 - cx0 - cx0 + x1;
         ycoeff0 = y0;
         ycoeff1 = cy0 + cy0 - y0 - y0;
         ycoeff2 = y0 - cy0 - cy0 + y1;
-    }
-
-    @Override
-    public int getOrder() {
-        return 2;
-    }
-
-    @Override
-    public double getXTop() {
-        return x0;
-    }
-
-    @Override
-    public double getYTop() {
-        return y0;
-    }
-
-    @Override
-    public double getXBot() {
-        return x1;
-    }
-
-    @Override
-    public double getYBot() {
-        return y1;
-    }
-
-    @Override
-    public double getXMin() {
-        return xmin;
-    }
-
-    @Override
-    public double getXMax() {
-        return xmax;
     }
 
     @Override

@@ -31,68 +31,29 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
 
 final class QOrder0 extends QCurve {
-    private double x;
-    private double y;
 
     public QOrder0(double x, double y) {
-        super(INCREASING);
-        this.x = x;
-        this.y = y;
-    }
-
-    @Override
-    public int getOrder() {
-        return 0;
-    }
-
-    @Override
-    public double getXTop() {
-        return x;
-    }
-
-    @Override
-    public double getYTop() {
-        return y;
-    }
-
-    @Override
-    public double getXBot() {
-        return x;
-    }
-
-    @Override
-    public double getYBot() {
-        return y;
-    }
-
-    @Override
-    public double getXMin() {
-        return x;
-    }
-
-    @Override
-    public double getXMax() {
-        return x;
+        super(0, INCREASING, x, y, x, y);
     }
 
     @Override
     public double getX0() {
-        return x;
+        return x0;
     }
 
     @Override
     public double getY0() {
-        return y;
+        return y0;
     }
 
     @Override
     public double getX1() {
-        return x;
+        return x0;
     }
 
     @Override
     public double getY1() {
-        return y;
+        return y0;
     }
 
     @Override
@@ -107,12 +68,12 @@ final class QOrder0 extends QCurve {
 
     @Override
     public double XforT(double t) {
-        return x;
+        return x0;
     }
 
     @Override
     public double YforT(double t) {
-        return y;
+        return y0;
     }
 
     @Override
@@ -137,15 +98,15 @@ final class QOrder0 extends QCurve {
 
     @Override
     public boolean accumulateCrossings(QCrossings c) {
-        return (x > c.getXLo() &&
-                x < c.getXHi() &&
-                y > c.getYLo() &&
-                y < c.getYHi());
+        return (x0 > c.getXLo() &&
+                x0 < c.getXHi() &&
+                y0 > c.getYLo() &&
+                y0 < c.getYHi());
     }
 
     @Override
     public void enlarge(Rectangle2D r) {
-        r.add(x, y);
+        r.add(x0, y0);
     }
 
     @Override
@@ -160,8 +121,8 @@ final class QOrder0 extends QCurve {
 
     @Override
     public int getSegment(double[] coords) {
-        coords[0] = x;
-        coords[1] = y;
+        coords[0] = x0;
+        coords[1] = y0;
         return PathIterator.SEG_MOVETO;
     }
 }

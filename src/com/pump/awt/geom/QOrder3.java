@@ -32,17 +32,10 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.QuadCurve2D;
 
 final class QOrder3 extends QCurve {
-    private double x0;
-    private double y0;
     private double cx0;
     private double cy0;
     private double cx1;
     private double cy1;
-    private double x1;
-    private double y1;
-
-    private double xmin;
-    private double xmax;
 
     private double xcoeff0;
     private double xcoeff1;
@@ -230,22 +223,19 @@ final class QOrder3 extends QCurve {
                   double x1, double y1,
                   int direction)
     {
-        super(direction);
+        super(3, direction, x0, y0, x1, y1,
+                Math.min(Math.min(x0, x1), Math.min(cx0, cx1)),
+                Math.max(Math.max(x0, x1), Math.max(cx0, cx1)) );
+
         // REMIND: Better accuracy in the root finding methods would
         //  ensure that cys are in range.  As it stands, they are never
         //  more than "1 mantissa bit" out of range...
         if (cy0 < y0) cy0 = y0;
         if (cy1 > y1) cy1 = y1;
-        this.x0 = x0;
-        this.y0 = y0;
         this.cx0 = cx0;
         this.cy0 = cy0;
         this.cx1 = cx1;
         this.cy1 = cy1;
-        this.x1 = x1;
-        this.y1 = y1;
-        xmin = Math.min(Math.min(x0, x1), Math.min(cx0, cx1));
-        xmax = Math.max(Math.max(x0, x1), Math.max(cx0, cx1));
         xcoeff0 = x0;
         xcoeff1 = (cx0 - x0) * 3.0;
         xcoeff2 = (cx1 - cx0 - cx0 + x0) * 3.0;
@@ -255,41 +245,6 @@ final class QOrder3 extends QCurve {
         ycoeff2 = (cy1 - cy0 - cy0 + y0) * 3.0;
         ycoeff3 = y1 - (cy1 - cy0) * 3.0 - y0;
         YforT1 = YforT2 = YforT3 = y0;
-    }
-
-    @Override
-    public int getOrder() {
-        return 3;
-    }
-
-    @Override
-    public double getXTop() {
-        return x0;
-    }
-
-    @Override
-    public double getYTop() {
-        return y0;
-    }
-
-    @Override
-    public double getXBot() {
-        return x1;
-    }
-
-    @Override
-    public double getYBot() {
-        return y1;
-    }
-
-    @Override
-    public double getXMin() {
-        return xmin;
-    }
-
-    @Override
-    public double getXMax() {
-        return xmax;
     }
 
     @Override

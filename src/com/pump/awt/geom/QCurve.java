@@ -28,8 +28,6 @@
 package com.pump.awt.geom;
 
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.CubicCurve2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.IllegalPathStateException;
 
@@ -37,7 +35,8 @@ public abstract class QCurve {
     public static final int INCREASING = 1;
     public static final int DECREASING = -1;
 
-    protected int direction;
+    public final int order, direction;
+    public final double x0, y0, x1, y1, xmin, xmax;
 
     public static void insertMove(ExposedArrayWrapper<QCurve> curves, double x, double y) {
         curves.add(new QOrder0(x, y));
@@ -713,12 +712,20 @@ public abstract class QCurve {
         return crossings;
     }
 
-    public QCurve(int direction) {
-        this.direction = direction;
+    public QCurve(int order, int direction, double x0, double y0, double x1, double y1) {
+        this(order, direction, x0, y0, x1, y1, Math.min(x0, x1), Math.max(x0, x1));
     }
 
-    public final int getDirection() {
-        return direction;
+    public QCurve(int order, int direction, double x0, double y0, double x1, double y1, double xmin, double xmax) {
+        this.order = order;
+        this.direction = direction;
+        this.x0 = x0;
+        this.y0 = y0;
+        this.x1 = x1;
+        this.y1 = y1;
+
+        this.xmin = xmin;
+        this.xmax = xmax;
     }
 
     public final QCurve getWithDirection(int direction) {
@@ -756,7 +763,7 @@ public abstract class QCurve {
 
     public String toString() {
         return ("QCurve["+
-                getOrder()+", "+
+                order+", "+
                 ("("+round(getX0())+", "+round(getY0())+"), ")+
                 controlPointString()+
                 ("("+round(getX1())+", "+round(getY1())+"), ")+
@@ -767,16 +774,6 @@ public abstract class QCurve {
     public String controlPointString() {
         return "";
     }
-
-    public abstract int getOrder();
-
-    public abstract double getXTop();
-    public abstract double getYTop();
-    public abstract double getXBot();
-    public abstract double getYBot();
-
-    public abstract double getXMin();
-    public abstract double getXMax();
 
     public abstract double getX0();
     public abstract double getY0();
@@ -793,8 +790,8 @@ public abstract class QCurve {
     public abstract double nextVertical(double t0, double t1);
 
     public int crossingsFor(double x, double y) {
-        if (y >= getYTop() && y < getYBot()) {
-            if (x < getXMax() && (x < getXMin() || x < XforY(y))) {
+        if (y >= y0 && y < y1) {
+            if (x < xmax && (x < xmin || x < XforY(y))) {
                 return 1;
             }
         }
@@ -803,14 +800,12 @@ public abstract class QCurve {
 
     public boolean accumulateCrossings(QCrossings c) {
         double xhi = c.getXHi();
-        if (getXMin() >= xhi) {
+        if (xmin >= xhi) {
             return false;
         }
         double xlo = c.getXLo();
         double ylo = c.getYLo();
         double yhi = c.getYHi();
-        double y0 = getYTop();
-        double y1 = getYBot();
         double tstart, ystart, tend, yend;
         if (y0 < ylo) {
             if (y1 <= ylo) {
@@ -872,23 +867,23 @@ public abstract class QCurve {
         System.out.println(this+".compareTo("+that+")");
         System.out.println("target range = "+yrange[0]+"=>"+yrange[1]);
         */
-        double y0 = yrange[0];
-        double y1 = yrange[1];
-        y1 = Math.min(Math.min(y1, this.getYBot()), that.getYBot());
-        if (y1 <= yrange[0]) {
+        double _y0 = yrange[0];
+        double _y1 = yrange[1];
+        _y1 = Math.min(Math.min(_y1, y1), that.y1);
+        if (_y1 <= yrange[0]) {
             System.err.println("this == "+this);
             System.err.println("that == "+that);
             System.out.println("target range = "+yrange[0]+"=>"+yrange[1]);
-            throw new InternalError("backstepping from "+yrange[0]+" to "+y1);
+            throw new InternalError("backstepping from "+yrange[0]+" to "+_y1);
         }
-        yrange[1] = y1;
-        if (this.getXMax() <= that.getXMin()) {
-            if (this.getXMin() == that.getXMax()) {
+        yrange[1] = _y1;
+        if (this.xmax <= that.xmin) {
+            if (this.xmin == that.xmax) {
                 return 0;
             }
             return -1;
         }
-        if (this.getXMin() >= that.getXMax()) {
+        if (this.xmin >= that.xmax) {
             return 1;
         }
         // Parameter s for thi(s) curve and t for tha(t) curve
@@ -897,37 +892,37 @@ public abstract class QCurve {
         // [st]h = parameters for hypothesis point
         // [d][xy]s = valuations of thi(s) curve at sh
         // [d][xy]t = valuations of tha(t) curve at th
-        double s0 = this.TforY(y0);
+        double s0 = this.TforY(_y0);
         double ys0 = this.YforT(s0);
-        if (ys0 < y0) {
-            s0 = refineTforY(s0, ys0, y0);
+        if (ys0 < _y0) {
+            s0 = refineTforY(s0, ys0, _y0);
             ys0 = this.YforT(s0);
         }
-        double s1 = this.TforY(y1);
-        if (this.YforT(s1) < y0) {
-            s1 = refineTforY(s1, this.YforT(s1), y0);
+        double s1 = this.TforY(_y1);
+        if (this.YforT(s1) < _y0) {
+            s1 = refineTforY(s1, this.YforT(s1), _y0);
             //System.out.println("s1 problem!");
         }
-        double t0 = that.TforY(y0);
+        double t0 = that.TforY(_y0);
         double yt0 = that.YforT(t0);
-        if (yt0 < y0) {
-            t0 = that.refineTforY(t0, yt0, y0);
+        if (yt0 < _y0) {
+            t0 = that.refineTforY(t0, yt0, _y0);
             yt0 = that.YforT(t0);
         }
-        double t1 = that.TforY(y1);
-        if (that.YforT(t1) < y0) {
-            t1 = that.refineTforY(t1, that.YforT(t1), y0);
+        double t1 = that.TforY(_y1);
+        if (that.YforT(t1) < _y0) {
+            t1 = that.refineTforY(t1, that.YforT(t1), _y0);
             //System.out.println("t1 problem!");
         }
         double xs0 = this.XforT(s0);
         double xt0 = that.XforT(t0);
-        double scale = Math.max(Math.abs(y0), Math.abs(y1));
+        double scale = Math.max(Math.abs(_y0), Math.abs(_y1));
         double ymin = Math.max(scale * 1E-14, 1E-300);
         if (fairlyClose(xs0, xt0)) {
             double bump = ymin;
-            double maxbump = Math.min(ymin * 1E13, (y1 - y0) * .1);
-            double y = y0 + bump;
-            while (y <= y1) {
+            double maxbump = Math.min(ymin * 1E13, (_y1 - _y0) * .1);
+            double y = _y0 + bump;
+            while (y <= _y1) {
                 if (fairlyClose(this.XforY(y), that.XforY(y))) {
                     if ((bump *= 2) > maxbump) {
                         bump = maxbump;
@@ -948,8 +943,8 @@ public abstract class QCurve {
                 }
                 y += bump;
             }
-            if (y > y0) {
-                if (y < y1) {
+            if (y > _y0) {
+                if (y < _y1) {
                     yrange[1] = y;
                 }
                 return 0;

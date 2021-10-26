@@ -39,7 +39,7 @@ final class QCurveLink {
         this.ytop = ystart;
         this.ybot = yend;
         this.etag = etag;
-        if (ytop < curve.getYTop() || ybot > curve.getYBot()) {
+        if (ytop < curve.y0 || ybot > curve.y1) {
             throw new InternalError("bad curvelink ["+ytop+"=>"+ybot+"] for "+curve);
         }
     }
@@ -54,7 +54,7 @@ final class QCurveLink {
         {
             return false;
         }
-        if (ystart < curve.getYTop() || yend > curve.getYBot()) {
+        if (ystart < curve.y0 || yend > curve.y1) {
             throw new InternalError("bad curvelink ["+ystart+"=>"+yend+"] for "+curve);
         }
         this.ytop = Math.min(ytop, ystart);
@@ -71,7 +71,7 @@ final class QCurveLink {
     }
 
     public QCurve getSubCurve() {
-        if (ytop == curve.getYTop() && ybot == curve.getYBot()) {
+        if (ytop == curve.y0 && ybot == curve.y1) {
             return curve.getWithDirection(etag);
         }
         return curve.getSubCurve(ytop, ybot, etag);
