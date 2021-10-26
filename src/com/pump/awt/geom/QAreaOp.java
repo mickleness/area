@@ -165,7 +165,7 @@ public abstract class QAreaOp {
     public abstract int getState();
 
     public ExposedArrayWrapper<QCurve> calculate(ExposedArrayWrapper<QCurve> left, ExposedArrayWrapper<QCurve> right) {
-        ExposedArrayWrapper<QEdge> edges = new ExposedArrayWrapper<>(QEdge.class);
+        ExposedArrayWrapper<QEdge> edges = new ExposedArrayWrapper<>(QEdge.class, left.elementCount + right.elementCount);
         addEdges(edges, left, QAreaOp.CTAG_LEFT);
         addEdges(edges, right, QAreaOp.CTAG_RIGHT);
         ExposedArrayWrapper<QCurve> curves = pruneEdges(edges);
@@ -187,30 +187,13 @@ public abstract class QAreaOp {
         }
     }
 
-    private static Comparator<QEdge> YXTopComparator = new Comparator<QEdge>() {
-        public int compare(QEdge o1, QEdge o2) {
-            QCurve c1 = o1.curve;
-            QCurve c2 = o2.curve;
-            double v1, v2;
-            if ((v1 = c1.y0) == (v2 = c2.y0)) {
-                if ((v1 = c1.x0) == (v2 = c2.x0)) {
-                    return 0;
-                }
-            }
-            if (v1 < v2) {
-                return -1;
-            }
-            return 1;
-        }
-    };
-
     private ExposedArrayWrapper<QCurve> pruneEdges(ExposedArrayWrapper<QEdge> edges) {
         int numedges = edges.elementCount;
         if (numedges < 2) {
             // empty list is expected with less than 2 edges
             return new ExposedArrayWrapper<>(QCurve.class);
         }
-        Arrays.sort(edges.elementData, 0, edges.elementCount, YXTopComparator);
+        Arrays.sort(edges.elementData, 0, edges.elementCount);
         if (false) {
             System.out.println("pruning: ");
             for (int i = 0; i < numedges; i++) {
@@ -405,7 +388,7 @@ public abstract class QAreaOp {
             yrange[0] = yend;
         }
         finalizeSubCurves(subcurves, chains);
-        ExposedArrayWrapper<QCurve> ret = new ExposedArrayWrapper<>(QCurve.class);
+        ExposedArrayWrapper<QCurve> ret = new ExposedArrayWrapper<>(QCurve.class, Math.max(subcurves.elementCount * 2, ExposedArrayWrapper.DEFAULT_INITIAL_CAPACITY) );
         for (int a = 0; a<subcurves.elementCount; a++) {
             QCurveLink link = subcurves.elementData[a];
             ret.add(link.getMoveto());
@@ -522,7 +505,7 @@ public abstract class QAreaOp {
             if (connectlinks) {
                 QChainEnd openend = new QChainEnd(link, null);
                 QChainEnd closeend = new QChainEnd(nextlink, openend);
-                openend.setOtherEnd(closeend);
+
                 chains.add(openend);
                 chains.add(closeend);
                 curlink += 2;

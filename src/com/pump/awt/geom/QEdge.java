@@ -27,7 +27,7 @@
 package com.pump.awt.geom;
 
 
-final class QEdge {
+final class QEdge implements Comparable<QEdge> {
     static final int INIT_PARTS = 4;
     static final int GROW_PARTS = 10;
 
@@ -107,5 +107,20 @@ final class QEdge {
                 (edgeTag == QAreaOp.ETAG_ENTER ? "I" :
                         (edgeTag == QAreaOp.ETAG_EXIT ? "O" : "N"))+
                 "]");
+    }
+
+    @Override
+    public int compareTo(QEdge o2) {
+        QCurve c2 = o2.curve;
+        double v1, v2;
+        if ((v1 = curve.y0) == (v2 = c2.y0)) {
+            if ((v1 = curve.x0) == (v2 = c2.x0)) {
+                return 0;
+            }
+        }
+        if (v1 < v2) {
+            return -1;
+        }
+        return 1;
     }
 }

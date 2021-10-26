@@ -38,14 +38,12 @@ final class QChainEnd {
         this.tail = first;
         this.partner = partner;
         this.etag = first.etag;
+        if (partner != null)
+            partner.partner = this;
     }
 
     public QCurveLink getChain() {
         return head;
-    }
-
-    public void setOtherEnd(QChainEnd partner) {
-        this.partner = partner;
     }
 
     public QChainEnd getPartner() {

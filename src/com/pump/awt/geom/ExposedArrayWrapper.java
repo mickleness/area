@@ -14,6 +14,8 @@ import java.lang.reflect.Array;
  */
 class ExposedArrayWrapper<T> implements Serializable {
 
+    public static final int DEFAULT_INITIAL_CAPACITY = 10;
+
     private static Object[] EMPTY = new Object[0];
 
     private static final long serialVersionUID = 1;

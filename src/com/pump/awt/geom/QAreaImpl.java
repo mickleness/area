@@ -69,11 +69,11 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (s instanceof QAreaImpl) {
             curves = ((QAreaImpl) s).curves;
         } else {
-            curves = pathToCurves(s.getPathIterator(null));
+            curves = pathToCurves(s.getPathIterator(null), ExposedArrayWrapper.DEFAULT_INITIAL_CAPACITY);
         }
     }
 
-    private static ExposedArrayWrapper<QCurve> pathToCurves(PathIterator pi) {
+    private static ExposedArrayWrapper<QCurve> pathToCurves(PathIterator pi, int estimatedCurveCount) {
         ExposedArrayWrapper<QCurve> curves = new ExposedArrayWrapper<>(QCurve.class);
         int windingRule = pi.getWindingRule();
         // coords array is big enough for holding:
@@ -482,7 +482,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
         // REMIND: A simpler operation can be performed for some types
         // of transform.
-        curves = pathToCurves(getPathIterator(t));
+        curves = pathToCurves(getPathIterator(t), curves.elementCount);
         invalidateBounds();
     }
 
