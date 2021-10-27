@@ -284,16 +284,14 @@ final class QOrder3 extends QCurve {
         double a_3 = a / 3.0;
         double t;
         if (R2 < Q3) {
-            double theta = Math.acos(R / Math.sqrt(Q3));
+            double[] thetaLUT = getThetaLUT(R / Math.sqrt(Q3));
             Q = -2.0 * Math.sqrt(Q);
-            t = refine(a, b, c, y, Q * Math.cos(theta / 3.0) - a_3);
+            t = refineTforY(y, Q * thetaLUT[0] - a_3);
             if (t < 0) {
-                t = refine(a, b, c, y,
-                        Q * Math.cos((theta + Math.PI * 2.0)/ 3.0) - a_3);
+                t = refineTforY(y, Q * thetaLUT[1] - a_3);
             }
             if (t < 0) {
-                t = refine(a, b, c, y,
-                        Q * Math.cos((theta - Math.PI * 2.0)/ 3.0) - a_3);
+                t = refineTforY(y, Q * thetaLUT[2] - a_3);
             }
         } else {
             boolean neg = (R < 0.0);
@@ -306,7 +304,7 @@ final class QOrder3 extends QCurve {
                 A = -A;
             }
             double B = (A == 0.0) ? 0.0 : (Q / A);
-            t = refine(a, b, c, y, (A + B) - a_3);
+            t = refineTforY(y, (A + B) - a_3);
         }
         if (t < 0) {
             //throw new InternalError("bad t");
@@ -338,75 +336,87 @@ final class QOrder3 extends QCurve {
         return t;
     }
 
-    private double refine(double a, double b, double c,
-                         double target, double t)
-    {
+
+    static double[][] thetaLUT;
+
+    /**
+     * Return a cached LUT approximating three values:
+     * Math.cos(Math.acos(z) / 3.0)
+     * Math.cos((Math.acos(z) + Math.PI * 2.0)/ 3.0)
+     * Math.cos((Math.acos(z) - Math.PI * 2.0)/ 3.0)
+     * <p>
+     * This is an approximation (should be accurate to around .001).
+     * We immediately take this value and refine it, so using an approximation
+     * should be OK.
+     * </p>
+     *
+     * @param z an input that is (R / sqrt(Q*Q*Q))
+     */
+    private static double[] getThetaLUT(double z) {
+        if (thetaLUT == null) {
+            thetaLUT = new double[1024][3];
+            for(int a = 0; a<thetaLUT.length; a++) {
+                double k = ((double)a) / ((double)(thetaLUT.length)) * 2 - 1;
+
+                double theta = Math.acos(k);
+
+                thetaLUT[a] = new double[] {
+                        Math.cos(theta / 3.0),
+                        Math.cos((theta + Math.PI * 2.0)/ 3.0),
+                        Math.cos((theta - Math.PI * 2.0)/ 3.0)
+                };
+            }
+        }
+
+        int index = (int) ( (z + 1) / 2.0 * thetaLUT.length);
+        if (index >= thetaLUT.length)
+            index = thetaLUT.length - 1;
+        return thetaLUT[index];
+    }
+
+    private double refineTforY(double targetY, double t) {
         if (t < -0.1 || t > 1.1) {
             return -1;
         }
         double y = YforT(t);
         double t0, t1;
-        if (y < target) {
+        if (y < targetY) {
             t0 = t;
             t1 = 1;
         } else {
             t0 = 0;
             t1 = t;
         }
-        double origt = t;
-        double origy = y;
         boolean useslope = true;
-        while (y != target) {
-            if (!useslope) {
-                double t2 = (t0 + t1) / 2;
-                if (t2 == t0 || t2 == t1) {
-                    break;
-                }
-                t = t2;
-            } else {
+        while (y != targetY) {
+            if (useslope) {
+                // our preference is to use Newton's method:
                 double slope = dYforT(t, 1);
                 if (slope == 0) {
                     useslope = false;
                     continue;
                 }
-                double t2 = t + ((target - y) / slope);
-                if (t2 == t || t2 <= t0 || t2 >= t1) {
+                double newT = t + ((targetY - y) / slope);
+                if (newT == t || newT <= t0 || newT >= t1) {
                     useslope = false;
                     continue;
                 }
-                t = t2;
+                t = newT;
+            } else {
+                // if that isn't an option: use a binary search
+                double newT = (t0 + t1) / 2;
+                if (newT == t0 || newT == t1) {
+                    break;
+                }
+                t = newT;
             }
             y = YforT(t);
-            if (y < target) {
+            if (y < targetY) {
                 t0 = t;
-            } else if (y > target) {
+            } else if (y > targetY) {
                 t1 = t;
             } else {
                 break;
-            }
-        }
-        boolean verbose = false;
-        if (false && t >= 0 && t <= 1) {
-            y = YforT(t);
-            long tdiff = diffbits(t, origt);
-            long ydiff = diffbits(y, origy);
-            long yerr = diffbits(y, target);
-            if (yerr > 0 || (verbose && tdiff > 0)) {
-                System.out.println("target was y = "+target);
-                System.out.println("original was y = "+origy+", t = "+origt);
-                System.out.println("final was y = "+y+", t = "+t);
-                System.out.println("t diff is "+tdiff);
-                System.out.println("y diff is "+ydiff);
-                System.out.println("y error is "+yerr);
-                double tlow = prev(t);
-                double ylow = YforT(tlow);
-                double thi = next(t);
-                double yhi = YforT(thi);
-                if (Math.abs(target - ylow) < Math.abs(target - y) ||
-                        Math.abs(target - yhi) < Math.abs(target - y))
-                {
-                    System.out.println("adjacent y's = ["+ylow+", "+yhi+"]");
-                }
             }
         }
         return (t > 1) ? -1 : t;
