@@ -575,7 +575,7 @@ final class QOrder3 extends QCurve {
         double cy0_ = (direction == INCREASING) ? cy0 : cy1;
         double cx1_ = (direction == DECREASING) ? cx0 : cx1;
         double cy1_ = (direction == DECREASING) ? cy0 : cy1;
-        return (("("+round(cx0_)+", "+round(cy0)+"), ")+
+        return (("("+round(cx0_)+", "+round(cy0_)+"), ")+
                 ("("+round(cx1_)+", "+round(cy1_)+"), "));
     }
 }
