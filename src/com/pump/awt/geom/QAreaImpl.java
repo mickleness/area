@@ -482,13 +482,102 @@ public class QAreaImpl implements QArea<QAreaImpl> {
      */
     @Override
     public void transform(AffineTransform t) {
-        if (t == null) {
-            throw new NullPointerException("transform must not be null");
+        Objects.requireNonNull(t, "transform must not be null");
+        if (t.isIdentity())
+            return;
+
+        if (!transform_optimized(t)) {
+            // this rebuilds the Area from scratch (it's very slow)
+            curves = pathToCurves(getPathIterator(t), curves.elementCount);
+            invalidateBounds();
         }
-        // REMIND: A simpler operation can be performed for some types
-        // of transform.
-        curves = pathToCurves(getPathIterator(t), curves.elementCount);
-        invalidateBounds();
+    }
+
+    /**
+     * This attempts to do a fast transform. It immediately aborts if the
+     * transform includes any rotation/shearing, and it may still fail even
+     * if the transform is a simple translation.
+     *
+     * @return true if this method updated curves and cachedBounds
+     */
+    private boolean transform_optimized(AffineTransform t) {
+        if(Math.abs(t.getShearX())>=.0000001 || Math.abs(t.getShearY())>=.0000001)
+            return false;
+
+        double scaleX = t.getScaleX();
+        double scaleY = t.getScaleY();
+        double translateX = t.getTranslateX();
+        double translateY = t.getTranslateY();
+        ExposedArrayWrapper newCurves = new ExposedArrayWrapper<>(QCurve.class, curves.elementCount);
+        for(int a = 0; a < curves.elementCount; a++) {
+            QCurve curve = curves.elementData[a];
+            QCurve newCurve;
+            if(curve instanceof QOrder0) {
+                double x0 = scaleX * curve.x0 + translateX;
+                double y0 = scaleY * curve.y0 + translateY;
+                newCurve = new QOrder0(x0, y0);
+            } else if(curve instanceof QOrder1) {
+                double x0 = scaleX * curve.x0 + translateX;
+                double y0 = scaleY * curve.y0 + translateY;
+                double x1 = scaleX * curve.x1 + translateX;
+                double y1 = scaleY * curve.y1 + translateY;
+                if (scaleY > 0) {
+                    newCurve = new QOrder1(x0, y0, x1, y1, curve.direction);
+                } else {
+                    newCurve = new QOrder1(x1, y1, x0, y0, -curve.direction);
+                }
+            } else if(curve instanceof QOrder2) {
+                QOrder2 quad = (QOrder2) curve;
+                double x0 = scaleX * curve.x0 + translateX;
+                double y0 = scaleY * curve.y0 + translateY;
+                double cx0 = scaleX * quad.cx0 + translateX;
+                double cy0 = scaleY * quad.cy0 + translateY;
+                double x1 = scaleX * curve.x1 + translateX;
+                double y1 = scaleY * curve.y1 + translateY;
+                if (scaleY > 0) {
+                    newCurve = new QOrder2(x0, y0, cx0, cy0, x1, y1, curve.direction);
+                } else {
+                    newCurve = new QOrder2(x1, y1, cx0, cy0, x0, y0, -curve.direction);
+                }
+            } else { //if(curve instanceof Order3X) {
+                QOrder3 cubic = (QOrder3) curve;
+                double x0 = scaleX * curve.x0 + translateX;
+                double y0 = scaleY * curve.y0 + translateY;
+                double cx0 = scaleX * cubic.cx0 + translateX;
+                double cy0 = scaleY * cubic.cy0 + translateY;
+                double cx1 = scaleX * cubic.cx1 + translateX;
+                double cy1 = scaleY * cubic.cy1 + translateY;
+                double x1 = scaleX * curve.x1 + translateX;
+                double y1 = scaleY * curve.y1 + translateY;
+                if (scaleY > 0) {
+                    newCurve = new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1, curve.direction);
+                } else {
+                    newCurve = new QOrder3(x1, y1, cx1, cy1, cx0, cy0, x0, y0, -curve.direction);
+                }
+            }
+            if( (newCurve.y0 == newCurve.y1) !=
+                    (curve.y0 == curve.y1)) {
+                /*
+                 * This can happen as a rare result of computer rounding error.
+                 *
+                 * For example:
+                 * 120.29388219471423 + 10 = 130.29388219471423
+                 * 120.29388219471421 + 10 = 130.29388219471423
+                 *
+                 * Here initial values were unique, but when you add the constant the final result
+                 * is the same. Unfortunately this condition will lead to an InternalError in subsequent QAreaOp calls,
+                 * so we need to abort this optimized approach.
+                 */
+                return false;
+            }
+            newCurves.add(newCurve);
+        }
+
+        curves = newCurves;
+        if (cachedBounds != null) {
+            cachedBounds = t.createTransformedShape(cachedBounds).getBounds2D();
+        }
+        return true;
     }
 
     /**

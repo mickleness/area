@@ -35,6 +35,10 @@ public class QAreaPerformanceTests extends TestCase {
 
     @Test
     public void testAddLetters() throws FileNotFoundException {
+        testCombiningShapes("Letters", getLetterGlyphs());
+    }
+
+    private List<Shape> getLetterGlyphs() {
         String letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         List<Shape> glyphs = new ArrayList<>(letters.length());
         Font font = new Font("serif", 0, 120);
@@ -44,8 +48,7 @@ public class QAreaPerformanceTests extends TestCase {
             GlyphVector gv = font.createGlyphVector(frc, chars);
             glyphs.add(gv.getOutline());
         }
-
-        testCombiningShapes("Letters", glyphs);
+        return glyphs;
     }
 
     @Test
@@ -100,104 +103,199 @@ public class QAreaPerformanceTests extends TestCase {
         testCombiningShapes("Random Cubics", shapes);
     }
 
-    private void testCombiningShapes(String name, List<Shape> shapes) throws FileNotFoundException {
-        QAreaFactory[] factories = getFactories();
-        long[][] resultsTable = new long[20][factories.length];
+    abstract class TestActivity {
+        String name;
 
-        Logger log = createFileLogger(name);
+        public TestActivity(String name) {
+            Objects.requireNonNull(name);
+            this.name = name;
+        }
 
-        log.info("This table catalogs the time in ms two different QArea implementations took to do the same work.");
+        /**
+         * This is executed just before the timer starts.
+         */
+        public void setup(int trial, QAreaFactory factory) {}
 
-        StringBuilder tableBuilder = new StringBuilder();
-        String tableHeader = toString(factories);
-        tableBuilder.append(tableHeader+"\n");
-        System.out.println(tableHeader);
+        /**
+         * This is the activity we time.
+         */
+        public abstract QArea run(int trial, QAreaFactory factory);
 
-        for(int trial = 0; trial < 20; trial++) {
-            BufferedImage expectedImage = null;
-            for(int factoryIndex = 0; factoryIndex < factories.length; factoryIndex++) {
-                QAreaFactory factory = factories[factoryIndex];
-                long[] sampleTimes = new long[5];
-                for(int sample = 0; sample < sampleTimes.length; sample++) {
-                    Random random = new Random(trial);
-                    List<Shape> shapesCopy = new LinkedList<>();
-                    shapesCopy.addAll(shapes);
-                    shapesCopy.addAll(shapes);
-                    QArea sum = null;
+        public void runAll() throws FileNotFoundException {
+            QAreaFactory[] factories = getFactories();
+            long[][] resultsTable = new long[10][factories.length];
+            Logger log = createFileLogger(name);
 
-                    System.gc();
-                    System.runFinalization();
-                    System.gc();
-                    System.runFinalization();
+            log.info("This table catalogs the time in ms two different QArea implementations took to do the same work.");
 
-                    sampleTimes[sample] = System.currentTimeMillis();
-                    while (!shapesCopy.isEmpty()) {
-                        int i = random.nextInt(shapesCopy.size());
-                        Shape shape = shapesCopy.remove(i);
-                        QArea a = factory.create(shape);
-                        double dx = 400 * random.nextDouble() - 200;
-                        double dy = 400 * random.nextDouble() - 200;
-                        a.transform(AffineTransform.getTranslateInstance(dx, dy));
-                        if (sum == null) {
-                            sum = a;
-                        } else {
-                            int op = shapesCopy.size() % 3;
-                            switch (op) {
-                                case 0:
-                                case 1:
-                                    sum.add(a);
-                                    break;
-                                case 2:
-                                    sum.subtract(a);
-                                    break;
+            StringBuilder tableBuilder = new StringBuilder();
+            String tableHeader = QAreaPerformanceTests.toString(factories);
+            tableBuilder.append(tableHeader+"\n");
+            System.out.println(tableHeader);
+
+            for(int trial = 0; trial < 10; trial++) {
+                BufferedImage expectedImage = null;
+                for(int factoryIndex = 0; factoryIndex < factories.length; factoryIndex++) {
+                    QAreaFactory factory = factories[factoryIndex];
+                    long[] sampleTimes = new long[5];
+                    for (int sample = 0; sample < sampleTimes.length; sample++) {
+
+                        setup(trial, factory);
+
+                        System.gc();
+                        System.runFinalization();
+                        System.gc();
+                        System.runFinalization();
+
+                        sampleTimes[sample] = System.currentTimeMillis();
+
+                        QArea result = run(trial, factory);
+
+                        sampleTimes[sample] = System.currentTimeMillis() - sampleTimes[sample];
+
+                        if (sample == 0) {
+                            if (factoryIndex == 0) {
+                                expectedImage = createImage(result);
+                            } else {
+                                BufferedImage bi = createImage(result);
+                                assertImageEquals(name+"-"+trial+"-"+factory, expectedImage, bi);
                             }
                         }
                     }
-                    sampleTimes[sample] = System.currentTimeMillis() - sampleTimes[sample];
-
-                    if (sample == 0) {
-                        if (factoryIndex == 0) {
-                            expectedImage = createImage(sum);
-                        } else {
-                            BufferedImage bi = createImage(sum);
-                            assertEquals(bi, expectedImage);
-                        }
-                    }
+                    Arrays.sort(sampleTimes);
+                    resultsTable[trial][factoryIndex] = sampleTimes[sampleTimes.length/2];
                 }
-                Arrays.sort(sampleTimes);
-
-                resultsTable[trial][factoryIndex] = sampleTimes[sampleTimes.length/2];
+                String tableRow = QAreaPerformanceTests.toString(resultsTable[trial]);
+                tableBuilder.append(tableRow+"\n");
+                System.out.println(tableRow);
             }
 
-            String tableRow = toString(resultsTable[trial]);
-            tableBuilder.append(tableRow+"\n");
-            System.out.println(tableRow);
-        }
-
-        log.info("Data:\n"+tableBuilder.toString());
-        log.info("finished");
-        for(Handler h : log.getHandlers()) {
-            h.close();
+            log.info("Data:\n"+tableBuilder.toString());
+            log.info("finished");
+            for(Handler h : log.getHandlers()) {
+                h.close();
+            }
         }
     }
 
-    private void assertEquals(BufferedImage bi1, BufferedImage bi2) {
-        assertEquals(bi1.getHeight(), bi2.getHeight());
-        assertEquals(bi1.getWidth(), bi2.getWidth());
-        assertEquals(bi1.getType(), bi2.getType());
+    class TransformActivity extends TestActivity {
+        QArea baseShape;
+        AffineTransform tx;
 
-        int w = bi1.getWidth();
-        int h = bi1.getHeight();
-        int[] row1 = new int[w];
-        int[] row2 = new int[w];
-        for(int y = 0; y<h; y++) {
-            bi1.getRaster().getDataElements(0, y, w, 1, row1);
-            bi2.getRaster().getDataElements(0, y, w, 1, row2);
-            for(int x = 0; x<w; x++) {
-                int argb1 = row1[x];
-                int argb2 = row2[x];
-                assertEquals(x+", "+y, argb1, argb2);
+        public TransformActivity(String name, AffineTransform tx) {
+            super(name);
+            this.tx = tx;
+        }
+
+        @Override
+        public void setup(int trial, QAreaFactory factory) {
+            baseShape = createLargeShape(trial, factory, getLetterGlyphs());
+        }
+
+        @Override
+        public QArea run(int trial, QAreaFactory factory) {
+            QArea copy = (QArea) baseShape.cloneArea();
+            copy.transform(tx);
+            return copy;
+        }
+    }
+
+    @Test
+    public void testTransform_translate() throws FileNotFoundException {
+        TestActivity activity = new TransformActivity("translate", AffineTransform.getTranslateInstance(10, 10));
+        activity.runAll();
+    }
+
+    @Test
+    public void testTransform_scale() throws FileNotFoundException {
+        TestActivity activity = new TransformActivity("scale", AffineTransform.getScaleInstance(1.234123423, 2.351235123));
+        activity.runAll();
+    }
+
+    @Test
+    public void testTransform_flipHorizontal() throws FileNotFoundException {
+        TestActivity activity = new TransformActivity("flip horizontal", AffineTransform.getScaleInstance(-1, 1));
+        activity.runAll();
+    }
+
+    @Test
+    public void testTransform_flipVertical() throws FileNotFoundException {
+        TestActivity activity = new TransformActivity("flip vertical", AffineTransform.getScaleInstance(1, -1));
+        activity.runAll();
+    }
+
+    @Test
+    public void testTransform_flipBoth() throws FileNotFoundException {
+        TestActivity activity = new TransformActivity("flip both", AffineTransform.getScaleInstance(-1.9182841212312, -.1435183451349));
+        activity.runAll();
+    }
+
+    private void testCombiningShapes(String name, List<Shape> shapes) throws FileNotFoundException {
+        TestActivity activity = new TestActivity(name) {
+            @Override
+            public QArea run(int trial, QAreaFactory factory) {
+                return createLargeShape(trial, factory, shapes);
             }
+        };
+        activity.runAll();
+    }
+
+    private QArea createLargeShape(int randomSeed, QAreaFactory factory, List<Shape> shapes) {
+        Random random = new Random(randomSeed);
+        List<Shape> shapesCopy = new LinkedList<>();
+        shapesCopy.addAll(shapes);
+        shapesCopy.addAll(shapes);
+
+        QArea sum = null;
+
+        while (!shapesCopy.isEmpty()) {
+            int i = random.nextInt(shapesCopy.size());
+            Shape shape = shapesCopy.remove(i);
+            QArea a = factory.create(shape);
+            double dx = 400 * random.nextDouble() - 200;
+            double dy = 400 * random.nextDouble() - 200;
+            a.transform(AffineTransform.getTranslateInstance(dx, dy));
+            if (sum == null) {
+                sum = a;
+            } else {
+                int op = shapesCopy.size() % 3;
+                switch (op) {
+                    case 0:
+                    case 1:
+                        sum.add(a);
+                        break;
+                    case 2:
+                        sum.subtract(a);
+                        break;
+                }
+            }
+        }
+        return sum;
+    }
+
+    private void assertImageEquals(String name, BufferedImage expected, BufferedImage actual) {
+        try {
+            assertEquals(expected.getHeight(), actual.getHeight());
+            assertEquals(expected.getWidth(), actual.getWidth());
+            assertEquals(expected.getType(), actual.getType());
+
+            int w = expected.getWidth();
+            int h = expected.getHeight();
+            int[] row1 = new int[w];
+            int[] row2 = new int[w];
+            for (int y = 0; y < h; y++) {
+                expected.getRaster().getDataElements(0, y, w, 1, row1);
+                actual.getRaster().getDataElements(0, y, w, 1, row2);
+                for (int x = 0; x < w; x++) {
+                    int argb1 = row1[x];
+                    int argb2 = row2[x];
+                    assertEquals(x + ", " + y, argb1, argb2);
+                }
+            }
+        } catch(Throwable t) {
+            writeImage(name+"-expected", expected);
+            writeImage(name+"-actual", actual);
+            throw t;
         }
     }
 
@@ -243,7 +341,7 @@ public class QAreaPerformanceTests extends TestCase {
         return logger;
     }
 
-    private String toString(Object[] array) {
+    public static String toString(Object[] array) {
         StringBuilder sb = new StringBuilder();
         for (int a = 0; a<array.length; a++) {
             if (a != 0) {
@@ -254,7 +352,7 @@ public class QAreaPerformanceTests extends TestCase {
         return sb.toString();
     }
 
-    private String toString(long[] array) {
+    public static String toString(long[] array) {
         StringBuilder sb = new StringBuilder();
         for (int a = 0; a<array.length; a++) {
             if (a != 0) {
@@ -265,10 +363,10 @@ public class QAreaPerformanceTests extends TestCase {
         return sb.toString();
     }
 
-    private void writeImage(String name, Shape shape) {
+    private void writeImage(String name, BufferedImage bi) {
         File file = new File(name+".png");
         try {
-            ImageIO.write(createImage(shape), "png", file);
+            ImageIO.write(bi, "png", file);
         } catch(IOException e) {
             e.printStackTrace();
         }
