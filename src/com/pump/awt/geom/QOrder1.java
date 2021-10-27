@@ -34,9 +34,9 @@ final class QOrder1 extends QCurve {
 
     public QOrder1(double x0, double y0,
                   double x1, double y1,
-                  int direction)
+                   boolean isIncreasingT)
     {
-        super(1, direction, x0, y0, x1, y1);
+        super(1, x0, y0, x1, y1, isIncreasingT);
     }
 
     @Override
@@ -137,7 +137,7 @@ final class QOrder1 extends QCurve {
         if (xstart > xlo || xend > xlo) {
             return true;
         }
-        c.record(ystart, yend, direction);
+        c.record(ystart, yend, isIncreasingT);
         return false;
     }
 
@@ -148,23 +148,23 @@ final class QOrder1 extends QCurve {
     }
 
     @Override
-    public QCurve getSubCurve(double ystart, double yend, int dir) {
+    public QCurve getSubCurve(double ystart, double yend, boolean isIncreasingT) {
         if (ystart == y0 && yend == y1) {
-            return getWithDirection(dir);
+            return getWithDirection(isIncreasingT);
         }
         if (x0 == x1) {
-            return new QOrder1(x0, ystart, x1, yend, dir);
+            return new QOrder1(x0, ystart, x1, yend, isIncreasingT);
         }
         double num = x0 - x1;
         double denom = y0 - y1;
         double xstart = (x0 + (ystart - y0) * num / denom);
         double xend = (x0 + (yend - y0) * num / denom);
-        return new QOrder1(xstart, ystart, xend, yend, dir);
+        return new QOrder1(xstart, ystart, xend, yend, isIncreasingT);
     }
 
     @Override
     public QCurve getReversedCurve() {
-        return new QOrder1(x0, y0, x1, y1, -direction);
+        return new QOrder1(x0, y0, x1, y1, !isIncreasingT);
     }
 
     @Override
@@ -253,7 +253,7 @@ final class QOrder1 extends QCurve {
 
     @Override
     public int getSegment(double[] coords) {
-        if (direction == INCREASING) {
+        if (isIncreasingT) {
             coords[0] = x1;
             coords[1] = y1;
         } else {

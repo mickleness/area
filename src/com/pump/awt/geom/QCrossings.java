@@ -61,7 +61,7 @@ public abstract class QCrossings {
         return yhi;
     }
 
-    public abstract void record(double ystart, double yend, int direction);
+    public abstract void record(double ystart, double yend, boolean isIncreasingT);
 
     public void print() {
         System.out.println("Crossings [");
@@ -191,15 +191,15 @@ public abstract class QCrossings {
                                   double x1, double y1)
     {
         if (y0 <= y1) {
-            return accumulateLine(x0, y0, x1, y1, 1);
+            return accumulateLine(x0, y0, x1, y1, true);
         } else {
-            return accumulateLine(x1, y1, x0, y0, -1);
+            return accumulateLine(x1, y1, x0, y0, false);
         }
     }
 
     public boolean accumulateLine(double x0, double y0,
                                   double x1, double y1,
-                                  int direction)
+                                  boolean isIncreasingT)
     {
         if (yhi <= y0 || ylo >= y1) {
             return false;
@@ -233,7 +233,7 @@ public abstract class QCrossings {
         if (xstart > xlo || xend > xlo) {
             return true;
         }
-        record(ystart, yend, direction);
+        record(ystart, yend, isIncreasingT);
         return false;
     }
 
@@ -251,9 +251,9 @@ public abstract class QCrossings {
         }
         if (x0 < xlo && coords[0] < xlo && coords[2] < xlo) {
             if (y0 < coords[3]) {
-                record(Math.max(y0, ylo), Math.min(coords[3], yhi), 1);
+                record(Math.max(y0, ylo), Math.min(coords[3], yhi), true);
             } else if (y0 > coords[3]) {
-                record(Math.max(coords[3], ylo), Math.min(y0, yhi), -1);
+                record(Math.max(coords[3], ylo), Math.min(y0, yhi), false);
             }
             return false;
         }
@@ -288,9 +288,9 @@ public abstract class QCrossings {
                 coords[2] < xlo && coords[4] < xlo)
         {
             if (y0 <= coords[5]) {
-                record(Math.max(y0, ylo), Math.min(coords[5], yhi), 1);
+                record(Math.max(y0, ylo), Math.min(coords[5], yhi), true);
             } else {
-                record(Math.max(coords[5], ylo), Math.min(y0, yhi), -1);
+                record(Math.max(coords[5], ylo), Math.min(y0, yhi), false);
             }
             return false;
         }
@@ -310,11 +310,13 @@ public abstract class QCrossings {
             super(xlo, ylo, xhi, yhi);
         }
 
+        @Override
         public boolean covers(double ystart, double yend) {
             return (limit == 2 && yranges[0] <= ystart && yranges[1] >= yend);
         }
 
-        public void record(double ystart, double yend, int direction) {
+        @Override
+        public void record(double ystart, double yend, boolean isIncreasingT) {
             if (ystart >= yend) {
                 return;
             }
@@ -450,10 +452,11 @@ public abstract class QCrossings {
         }
 
         @Override
-        public void record(double ystart, double yend, int direction) {
+        public void record(double ystart, double yend, boolean isIncreasingT) {
             if (ystart >= yend) {
                 return;
             }
+            int direction = isIncreasingT ? 1 : -1;
             int cur = 0;
             // Quickly jump over all pairs that are completely "above"
             while (cur < limit && ystart > yranges[cur+1]) {

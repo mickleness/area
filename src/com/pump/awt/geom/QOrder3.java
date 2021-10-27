@@ -52,13 +52,13 @@ final class QOrder3 extends QCurve {
                               double cx0, double cy0,
                               double cx1, double cy1,
                               double x1, double y1,
-                              int direction)
+                              boolean isIncreasingT)
     {
         int numparams = getHorizontalParams(y0, cy0, cy1, y1, tmp);
         if (numparams == 0) {
             // We are using addInstance here to avoid inserting horisontal
             // segments
-            addInstance(curves, x0, y0, cx0, cy0, cx1, cy1, x1, y1, direction);
+            addInstance(curves, x0, y0, cx0, cy0, cx1, cy1, x1, y1, isIncreasingT);
             return;
         }
         // Store coordinates for splitting at tmp[3..10]
@@ -80,7 +80,7 @@ final class QOrder3 extends QCurve {
             split(tmp, 9, t);
         }
         int index = 3;
-        if (direction == DECREASING) {
+        if (!isIncreasingT) {
             index += numparams * 6;
         }
         while (numparams >= 0) {
@@ -89,9 +89,9 @@ final class QOrder3 extends QCurve {
                     tmp[index + 2], tmp[index + 3],
                     tmp[index + 4], tmp[index + 5],
                     tmp[index + 6], tmp[index + 7],
-                    direction);
+                    isIncreasingT);
             numparams--;
-            if (direction == INCREASING) {
+            if (isIncreasingT) {
                 index += 6;
             } else {
                 index -= 6;
@@ -104,13 +104,13 @@ final class QOrder3 extends QCurve {
                                    double cx0, double cy0,
                                    double cx1, double cy1,
                                    double x1, double y1,
-                                   int direction) {
+                                   boolean isIncreasingT) {
         if (y0 > y1) {
             curves.add(new QOrder3(x1, y1, cx1, cy1, cx0, cy0, x0, y0,
-                    -direction));
+                    !isIncreasingT));
         } else if (y1 > y0) {
             curves.add(new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1,
-                    direction));
+                    isIncreasingT));
         }
     }
 
@@ -221,11 +221,11 @@ final class QOrder3 extends QCurve {
                   double cx0, double cy0,
                   double cx1, double cy1,
                   double x1, double y1,
-                  int direction)
+                  boolean isIncreasingT)
     {
-        super(3, direction, x0, y0, x1, y1,
+        super(3, x0, y0, x1, y1,
                 Math.min(Math.min(x0, x1), Math.min(cx0, cx1)),
-                Math.max(Math.max(x0, x1), Math.max(cx0, cx1)) );
+                Math.max(Math.max(x0, x1), Math.max(cx0, cx1)), isIncreasingT );
 
         // REMIND: Better accuracy in the root finding methods would
         //  ensure that cys are in range.  As it stands, they are never
@@ -492,9 +492,9 @@ final class QOrder3 extends QCurve {
     }
 
     @Override
-    public QCurve getSubCurve(double ystart, double yend, int dir) {
+    public QCurve getSubCurve(double ystart, double yend, boolean isIncreasingT) {
         if (ystart <= y0 && yend >= y1) {
-            return getWithDirection(dir);
+            return getWithDirection(isIncreasingT);
         }
         double[] eqn = new double[14];
         double t0, t1;
@@ -541,17 +541,17 @@ final class QOrder3 extends QCurve {
                 eqn[i+2], eqn[i+3],
                 eqn[i+4], eqn[i+5],
                 eqn[i+6], yend,
-                dir);
+                isIncreasingT);
     }
 
     @Override
     public QCurve getReversedCurve() {
-        return new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1, -direction);
+        return new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1, !isIncreasingT);
     }
 
     @Override
     public int getSegment(double[] coords) {
-        if (direction == INCREASING) {
+        if (isIncreasingT) {
             coords[0] = cx0;
             coords[1] = cy0;
             coords[2] = cx1;
@@ -571,10 +571,10 @@ final class QOrder3 extends QCurve {
 
     @Override
     public String controlPointString() {
-        double cx0_ = (direction == INCREASING) ? cx0 : cx1;
-        double cy0_ = (direction == INCREASING) ? cy0 : cy1;
-        double cx1_ = (direction == DECREASING) ? cx0 : cx1;
-        double cy1_ = (direction == DECREASING) ? cy0 : cy1;
+        double cx0_ = isIncreasingT ? cx0 : cx1;
+        double cy0_ = isIncreasingT ? cy0 : cy1;
+        double cx1_ = isIncreasingT ? cx0 : cx1;
+        double cy1_ = isIncreasingT ? cy0 : cy1;
         return (("("+round(cx0_)+", "+round(cy0_)+"), ")+
                 ("("+round(cx1_)+", "+round(cy1_)+"), "));
     }

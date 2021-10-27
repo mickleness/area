@@ -32,10 +32,8 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.IllegalPathStateException;
 
 public abstract class QCurve {
-    public static final int INCREASING = 1;
-    public static final int DECREASING = -1;
-
-    public final int order, direction;
+    public final int order;
+    public final boolean isIncreasingT;
     public final double x0, y0, x1, y1, xmin, xmax;
 
     public static void insertMove(ExposedArrayWrapper<QCurve> curves, double x, double y) {
@@ -49,11 +47,11 @@ public abstract class QCurve {
         if (y0 < y1) {
             curves.add(new QOrder1(x0, y0,
                     x1, y1,
-                    INCREASING));
+                    true));
         } else if (y0 > y1) {
             curves.add(new QOrder1(x1, y1,
                     x0, y0,
-                    DECREASING));
+                    false));
         } else {
             // Do not add horizontal lines
         }
@@ -69,7 +67,7 @@ public abstract class QCurve {
                     coords[2], y1,
                     coords[0], coords[1],
                     x0, y0,
-                    DECREASING);
+                    false);
         } else if (y0 == y1 && y0 == coords[1]) {
             // Do not add horizontal lines
             return;
@@ -78,7 +76,7 @@ public abstract class QCurve {
                     x0, y0,
                     coords[0], coords[1],
                     coords[2], y1,
-                    INCREASING);
+                    true);
         }
     }
 
@@ -93,7 +91,7 @@ public abstract class QCurve {
                     coords[2], coords[3],
                     coords[0], coords[1],
                     x0, y0,
-                    DECREASING);
+                    false);
         } else if (y0 == y1 && y0 == coords[1] && y0 == coords[3]) {
             // Do not add horizontal lines
             return;
@@ -103,7 +101,7 @@ public abstract class QCurve {
                     coords[0], coords[1],
                     coords[2], coords[3],
                     coords[4], y1,
-                    INCREASING);
+                    true);
         }
     }
 
@@ -712,13 +710,13 @@ public abstract class QCurve {
         return crossings;
     }
 
-    public QCurve(int order, int direction, double x0, double y0, double x1, double y1) {
-        this(order, direction, x0, y0, x1, y1, Math.min(x0, x1), Math.max(x0, x1));
+    public QCurve(int order, double x0, double y0, double x1, double y1, boolean isIncreasingT) {
+        this(order, x0, y0, x1, y1, Math.min(x0, x1), Math.max(x0, x1), isIncreasingT);
     }
 
-    public QCurve(int order, int direction, double x0, double y0, double x1, double y1, double xmin, double xmax) {
+    public QCurve(int order, double x0, double y0, double x1, double y1, double xmin, double xmax, boolean isIncreasingT) {
         this.order = order;
-        this.direction = direction;
+        this.isIncreasingT = isIncreasingT;
         this.x0 = x0;
         this.y0 = y0;
         this.x1 = x1;
@@ -728,8 +726,8 @@ public abstract class QCurve {
         this.xmax = xmax;
     }
 
-    public final QCurve getWithDirection(int direction) {
-        return (this.direction == direction ? this : getReversedCurve());
+    public final QCurve getWithDirection(boolean isIncreasingT) {
+        return (this.isIncreasingT == isIncreasingT ? this : getReversedCurve());
     }
 
     public static double round(double v) {
@@ -762,16 +760,16 @@ public abstract class QCurve {
     }
 
     public String toString() {
-        double _x0 = direction == INCREASING ? x0 : x1;
-        double _y0 = direction == INCREASING ? y0 : y1;
-        double _x1 = direction == INCREASING ? x1 : x0;
-        double _y1 = direction == INCREASING ? y1 : y0;
+        double _x0 = isIncreasingT ? x0 : x1;
+        double _y0 = isIncreasingT ? y0 : y1;
+        double _x1 = isIncreasingT ? x1 : x0;
+        double _y1 = isIncreasingT ? y1 : y0;
         return ("QCurve["+
                 order+", "+
                 ("("+round(_x0)+", "+round(_y0)+"), ")+
                 controlPointString()+
                 ("("+round(_x1)+", "+round(_y1)+"), ")+
-                (direction == INCREASING ? "D" : "U")+
+                (isIncreasingT ? "D" : "U")+
                 "]");
     }
 
@@ -847,7 +845,7 @@ public abstract class QCurve {
             tstart = nextVertical(tstart, tend);
         }
         if (hitLo) {
-            c.record(ystart, yend, direction);
+            c.record(ystart, yend, isIncreasingT);
         }
         return false;
     }
@@ -855,11 +853,11 @@ public abstract class QCurve {
     public abstract void enlarge(Rectangle2D r);
 
     public QCurve getSubCurve(double ystart, double yend) {
-        return getSubCurve(ystart, yend, direction);
+        return getSubCurve(ystart, yend, isIncreasingT);
     }
 
     public abstract QCurve getReversedCurve();
-    public abstract QCurve getSubCurve(double ystart, double yend, int dir);
+    public abstract QCurve getSubCurve(double ystart, double yend, boolean isIncreasingT);
 
     public int compareTo(QCurve that, double[] yrange) {
         /*

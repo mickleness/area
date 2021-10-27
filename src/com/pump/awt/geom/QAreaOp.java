@@ -108,7 +108,7 @@ public abstract class QAreaOp {
             // assert(e.getCurveTag() == CTAG_LEFT);
             int newCount = count;
             int type = (newCount == 0 ? ETAG_ENTER : ETAG_IGNORE);
-            newCount += e.curve.direction;
+            newCount += e.curve.isIncreasingT ? 1 : -1;
             count = newCount;
             return (newCount == 0 ? ETAG_EXIT : type);
         }

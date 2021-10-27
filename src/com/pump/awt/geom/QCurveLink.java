@@ -68,9 +68,9 @@ final class QCurveLink {
 
     public QCurve getSubCurve() {
         if (ytop == curve.y0 && ybot == curve.y1) {
-            return curve.getWithDirection(etag);
+            return curve.getWithDirection(etag == 1);
         }
-        return curve.getSubCurve(ytop, ybot, etag);
+        return curve.getSubCurve(ytop, ybot, etag == 1);
     }
 
     public QCurve getMoveto() {

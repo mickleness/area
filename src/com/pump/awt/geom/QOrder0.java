@@ -33,7 +33,7 @@ import java.awt.geom.PathIterator;
 final class QOrder0 extends QCurve {
 
     public QOrder0(double x, double y) {
-        super(0, INCREASING, x, y, x, y);
+        super(0, x, y, x, y, true);
     }
 
     @Override
@@ -90,7 +90,7 @@ final class QOrder0 extends QCurve {
     }
 
     @Override
-    public QCurve getSubCurve(double ystart, double yend, int dir) {
+    public QCurve getSubCurve(double ystart, double yend, boolean isIncreasingT) {
         return this;
     }
 

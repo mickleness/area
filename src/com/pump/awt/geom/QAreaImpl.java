@@ -522,9 +522,9 @@ public class QAreaImpl implements QArea<QAreaImpl> {
                 double x1 = scaleX * curve.x1 + translateX;
                 double y1 = scaleY * curve.y1 + translateY;
                 if (scaleY > 0) {
-                    newCurve = new QOrder1(x0, y0, x1, y1, curve.direction);
+                    newCurve = new QOrder1(x0, y0, x1, y1, curve.isIncreasingT);
                 } else {
-                    newCurve = new QOrder1(x1, y1, x0, y0, -curve.direction);
+                    newCurve = new QOrder1(x1, y1, x0, y0, !curve.isIncreasingT);
                 }
             } else if(curve instanceof QOrder2) {
                 QOrder2 quad = (QOrder2) curve;
@@ -535,9 +535,9 @@ public class QAreaImpl implements QArea<QAreaImpl> {
                 double x1 = scaleX * curve.x1 + translateX;
                 double y1 = scaleY * curve.y1 + translateY;
                 if (scaleY > 0) {
-                    newCurve = new QOrder2(x0, y0, cx0, cy0, x1, y1, curve.direction);
+                    newCurve = new QOrder2(x0, y0, cx0, cy0, x1, y1, curve.isIncreasingT);
                 } else {
-                    newCurve = new QOrder2(x1, y1, cx0, cy0, x0, y0, -curve.direction);
+                    newCurve = new QOrder2(x1, y1, cx0, cy0, x0, y0, !curve.isIncreasingT);
                 }
             } else { //if(curve instanceof Order3X) {
                 QOrder3 cubic = (QOrder3) curve;
@@ -550,9 +550,9 @@ public class QAreaImpl implements QArea<QAreaImpl> {
                 double x1 = scaleX * curve.x1 + translateX;
                 double y1 = scaleY * curve.y1 + translateY;
                 if (scaleY > 0) {
-                    newCurve = new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1, curve.direction);
+                    newCurve = new QOrder3(x0, y0, cx0, cy0, cx1, cy1, x1, y1, curve.isIncreasingT);
                 } else {
-                    newCurve = new QOrder3(x1, y1, cx1, cy1, cx0, cy0, x0, y0, -curve.direction);
+                    newCurve = new QOrder3(x1, y1, cx1, cy1, cx0, cy0, x0, y0, !curve.isIncreasingT);
                 }
             }
             if( (newCurve.y0 == newCurve.y1) !=
@@ -752,10 +752,10 @@ class QAreaIterator implements PathIterator {
             if (index < curves.elementCount) {
                 thiscurve = curves.elementData[index];
 
-                double prevEndX = prevcurve.direction == QCurve.INCREASING ? prevcurve.x1 : prevcurve.x0;
-                double prevEndY = prevcurve.direction == QCurve.INCREASING ? prevcurve.y1 : prevcurve.y0;
-                double thisStartX = thiscurve.direction == QCurve.INCREASING ? thiscurve.x0 : thiscurve.x1;
-                double thisStartY = thiscurve.direction == QCurve.INCREASING ? thiscurve.y0 : thiscurve.y1;
+                double prevEndX = prevcurve.isIncreasingT ? prevcurve.x1 : prevcurve.x0;
+                double prevEndY = prevcurve.isIncreasingT ? prevcurve.y1 : prevcurve.y0;
+                double thisStartX = thiscurve.isIncreasingT ? thiscurve.x0 : thiscurve.x1;
+                double thisStartY = thiscurve.isIncreasingT ? thiscurve.y0 : thiscurve.y1;
 
                 if (thiscurve.order != 0 &&
                         prevEndX == thisStartX &&
@@ -792,8 +792,8 @@ class QAreaIterator implements PathIterator {
             if (thiscurve == null || thiscurve.order == 0) {
                 return SEG_CLOSE;
             }
-            coords[0] = thiscurve.direction == QCurve.INCREASING ? thiscurve.x0 : thiscurve.x1;
-            coords[1] = thiscurve.direction == QCurve.INCREASING ? thiscurve.y0 : thiscurve.y1;
+            coords[0] = thiscurve.isIncreasingT ? thiscurve.x0 : thiscurve.x1;
+            coords[1] = thiscurve.isIncreasingT ? thiscurve.y0 : thiscurve.y1;
             segtype = SEG_LINETO;
             numpoints = 1;
         } else if (thiscurve == null) {

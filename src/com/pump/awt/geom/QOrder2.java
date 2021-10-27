@@ -45,13 +45,13 @@ final class QOrder2 extends QCurve {
                               double x0, double y0,
                               double cx0, double cy0,
                               double x1, double y1,
-                              int direction)
+                              boolean isIncreasingT)
     {
         int numparams = getHorizontalParams(y0, cy0, y1, tmp);
         if (numparams == 0) {
             // We are using addInstance here to avoid inserting horisontal
             // segments
-            addInstance(curves, x0, y0, cx0, cy0, x1, y1, direction);
+            addInstance(curves, x0, y0, cx0, cy0, x1, y1, isIncreasingT);
             return;
         }
         // assert(numparams == 1);
@@ -60,23 +60,23 @@ final class QOrder2 extends QCurve {
         tmp[2] = cx0; tmp[3] = cy0;
         tmp[4] = x1;  tmp[5] = y1;
         split(tmp, 0, t);
-        int i0 = (direction == INCREASING)? 0 : 4;
+        int i0 = isIncreasingT ? 0 : 4;
         int i1 = 4 - i0;
         addInstance(curves, tmp[i0], tmp[i0 + 1], tmp[i0 + 2], tmp[i0 + 3],
-                tmp[i0 + 4], tmp[i0 + 5], direction);
+                tmp[i0 + 4], tmp[i0 + 5], isIncreasingT);
         addInstance(curves, tmp[i1], tmp[i1 + 1], tmp[i1 + 2], tmp[i1 + 3],
-                tmp[i1 + 4], tmp[i1 + 5], direction);
+                tmp[i1 + 4], tmp[i1 + 5], isIncreasingT);
     }
 
     public static void addInstance(ExposedArrayWrapper<QCurve> curves,
                                    double x0, double y0,
                                    double cx0, double cy0,
                                    double x1, double y1,
-                                   int direction) {
+                                   boolean isIncreasingT) {
         if (y0 > y1) {
-            curves.add(new QOrder2(x1, y1, cx0, cy0, x0, y0, -direction));
+            curves.add(new QOrder2(x1, y1, cx0, cy0, x0, y0, !isIncreasingT));
         } else if (y1 > y0) {
-            curves.add(new QOrder2(x0, y0, cx0, cy0, x1, y1, direction));
+            curves.add(new QOrder2(x0, y0, cx0, cy0, x1, y1, isIncreasingT));
         }
     }
 
@@ -154,11 +154,11 @@ final class QOrder2 extends QCurve {
     public QOrder2(double x0, double y0,
                   double cx0, double cy0,
                   double x1, double y1,
-                  int direction)
+                  boolean isIncreasingT)
     {
-        super(2, direction, x0, y0, x1, y1,
+        super(2, x0, y0, x1, y1,
                 Math.min(x0, Math.min(x1, cx0)),
-                Math.max(x0, Math.max(x1, cx0)) );
+                Math.max(x0, Math.max(x1, cx0)), isIncreasingT );
         // REMIND: Better accuracy in the root finding methods would
         //  ensure that cy0 is in range.  As it stands, it is never
         //  more than "1 mantissa bit" out of range...
@@ -339,11 +339,11 @@ final class QOrder2 extends QCurve {
     }
 
     @Override
-    public QCurve getSubCurve(double ystart, double yend, int dir) {
+    public QCurve getSubCurve(double ystart, double yend, boolean isIncreasingT) {
         double t0, t1;
         if (ystart <= y0) {
             if (yend >= y1) {
-                return getWithDirection(dir);
+                return getWithDirection(isIncreasingT);
             }
             t0 = 0;
         } else {
@@ -374,19 +374,19 @@ final class QOrder2 extends QCurve {
         return new QOrder2(eqn[i+0], ystart,
                 eqn[i+2], eqn[i+3],
                 eqn[i+4], yend,
-                dir);
+                isIncreasingT);
     }
 
     @Override
     public QCurve getReversedCurve() {
-        return new QOrder2(x0, y0, cx0, cy0, x1, y1, -direction);
+        return new QOrder2(x0, y0, cx0, cy0, x1, y1, !isIncreasingT);
     }
 
     @Override
     public int getSegment(double[] coords) {
         coords[0] = cx0;
         coords[1] = cy0;
-        if (direction == INCREASING) {
+        if (isIncreasingT) {
             coords[2] = x1;
             coords[3] = y1;
         } else {

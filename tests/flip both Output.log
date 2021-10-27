@@ -2,14 +2,14 @@ This table catalogs the time in ms two different QArea implementations took to d
 Data:
 LegacyArea Factory	QAreaImpl Factory
 15	0
-16	0
+15	0
 13	0
 13	11
-15	12
+14	10
 14	0
-12	0
-13	11
-13	11
+13	0
+13	10
+13	9
 13	0
 
 finished
