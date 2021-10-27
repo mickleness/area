@@ -12,6 +12,7 @@ public interface QArea<T> extends Shape {
     void exclusiveOr(T shape);
     void intersect(T shape);
     boolean isEqual(T shape);
+    T cloneArea();
     void reset();
     boolean isEmpty();
     boolean isPolygonal();

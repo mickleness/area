@@ -385,7 +385,7 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         if (curves.elementCount > 0) {
             QCurve c = curves.elementData[0];
             // First point is always an order 0 curve (moveto)
-            r.setRect(c.getX0(), c.getY0(), 0, 0);
+            r.setRect(c.x0, c.y0, 0, 0);
             for (int i = 1; i < curves.elementCount; i++) {
                 curves.elementData[i].enlarge(r);
             }
@@ -465,6 +465,11 @@ public class QAreaImpl implements QArea<QAreaImpl> {
         }
         ExposedArrayWrapper<QCurve> c = new QAreaOp.XorOp().calculate(this.curves, other.curves);
         return c.elementCount == 0;
+    }
+
+    @Override
+    public QAreaImpl cloneArea() {
+        return new QAreaImpl(this);
     }
 
     /**
@@ -657,9 +662,15 @@ class QAreaIterator implements PathIterator {
             index++;
             if (index < curves.elementCount) {
                 thiscurve = curves.elementData[index];
+
+                double prevEndX = prevcurve.direction == QCurve.INCREASING ? prevcurve.x1 : prevcurve.x0;
+                double prevEndY = prevcurve.direction == QCurve.INCREASING ? prevcurve.y1 : prevcurve.y0;
+                double thisStartX = thiscurve.direction == QCurve.INCREASING ? thiscurve.x0 : thiscurve.x1;
+                double thisStartY = thiscurve.direction == QCurve.INCREASING ? thiscurve.y0 : thiscurve.y1;
+
                 if (thiscurve.order != 0 &&
-                        prevcurve.getX1() == thiscurve.getX0() &&
-                        prevcurve.getY1() == thiscurve.getY0())
+                        prevEndX == thisStartX &&
+                        prevEndY == thisStartY)
                 {
                     prevcurve = null;
                 }
@@ -692,8 +703,8 @@ class QAreaIterator implements PathIterator {
             if (thiscurve == null || thiscurve.order == 0) {
                 return SEG_CLOSE;
             }
-            coords[0] = thiscurve.getX0();
-            coords[1] = thiscurve.getY0();
+            coords[0] = thiscurve.direction == QCurve.INCREASING ? thiscurve.x0 : thiscurve.x1;
+            coords[1] = thiscurve.direction == QCurve.INCREASING ? thiscurve.y0 : thiscurve.y1;
             segtype = SEG_LINETO;
             numpoints = 1;
         } else if (thiscurve == null) {

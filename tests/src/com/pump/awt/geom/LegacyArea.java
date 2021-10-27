@@ -53,6 +53,11 @@ public class LegacyArea implements QArea<LegacyArea> {
     }
 
     @Override
+    public LegacyArea cloneArea() {
+        return new LegacyArea(delegate);
+    }
+
+    @Override
     public void reset() {
         delegate.reset();
     }

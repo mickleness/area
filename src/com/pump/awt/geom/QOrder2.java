@@ -31,8 +31,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.PathIterator;
 
 final class QOrder2 extends QCurve {
-    private double cx0;
-    private double cy0;
+    public final double cx0;
+    public final double cy0;
 
     private double xcoeff0;
     private double xcoeff1;
@@ -175,26 +175,6 @@ final class QOrder2 extends QCurve {
         ycoeff0 = y0;
         ycoeff1 = cy0 + cy0 - y0 - y0;
         ycoeff2 = y0 - cy0 - cy0 + y1;
-    }
-
-    @Override
-    public double getX0() {
-        return (direction == INCREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY0() {
-        return (direction == INCREASING) ? y0 : y1;
-    }
-
-    @Override
-    public double getX1() {
-        return (direction == DECREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY1() {
-        return (direction == DECREASING) ? y0 : y1;
     }
 
     @Override

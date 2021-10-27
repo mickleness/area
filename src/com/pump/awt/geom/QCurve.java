@@ -762,11 +762,15 @@ public abstract class QCurve {
     }
 
     public String toString() {
+        double _x0 = direction == INCREASING ? x0 : x1;
+        double _y0 = direction == INCREASING ? y0 : y1;
+        double _x1 = direction == INCREASING ? x1 : x0;
+        double _y1 = direction == INCREASING ? y1 : y0;
         return ("QCurve["+
                 order+", "+
-                ("("+round(getX0())+", "+round(getY0())+"), ")+
+                ("("+round(_x0)+", "+round(_y0)+"), ")+
                 controlPointString()+
-                ("("+round(getX1())+", "+round(getY1())+"), ")+
+                ("("+round(_x1)+", "+round(_y1)+"), ")+
                 (direction == INCREASING ? "D" : "U")+
                 "]");
     }
@@ -774,11 +778,6 @@ public abstract class QCurve {
     public String controlPointString() {
         return "";
     }
-
-    public abstract double getX0();
-    public abstract double getY0();
-    public abstract double getX1();
-    public abstract double getY1();
 
     public abstract double XforY(double y);
     public abstract double TforY(double y);

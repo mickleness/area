@@ -37,26 +37,6 @@ final class QOrder0 extends QCurve {
     }
 
     @Override
-    public double getX0() {
-        return x0;
-    }
-
-    @Override
-    public double getY0() {
-        return y0;
-    }
-
-    @Override
-    public double getX1() {
-        return x0;
-    }
-
-    @Override
-    public double getY1() {
-        return y0;
-    }
-
-    @Override
     public double XforY(double y) {
         return y;
     }

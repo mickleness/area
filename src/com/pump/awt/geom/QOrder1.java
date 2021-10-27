@@ -40,26 +40,6 @@ final class QOrder1 extends QCurve {
     }
 
     @Override
-    public double getX0() {
-        return (direction == INCREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY0() {
-        return (direction == INCREASING) ? y0 : y1;
-    }
-
-    @Override
-    public double getX1() {
-        return (direction == DECREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY1() {
-        return (direction == DECREASING) ? y0 : y1;
-    }
-
-    @Override
     public double XforY(double y) {
         if (x0 == x1 || y <= y0) {
             return x0;

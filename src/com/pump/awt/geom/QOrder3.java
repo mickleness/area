@@ -32,10 +32,10 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.QuadCurve2D;
 
 final class QOrder3 extends QCurve {
-    private double cx0;
-    private double cy0;
-    private double cx1;
-    private double cy1;
+    public final double cx0;
+    public final double cy0;
+    public final double cx1;
+    public final double cy1;
 
     private double xcoeff0;
     private double xcoeff1;
@@ -245,26 +245,6 @@ final class QOrder3 extends QCurve {
         ycoeff2 = (cy1 - cy0 - cy0 + y0) * 3.0;
         ycoeff3 = y1 - (cy1 - cy0) * 3.0 - y0;
         YforT1 = YforT2 = YforT3 = y0;
-    }
-
-    @Override
-    public double getX0() {
-        return (direction == INCREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY0() {
-        return (direction == INCREASING) ? y0 : y1;
-    }
-
-    @Override
-    public double getX1() {
-        return (direction == DECREASING) ? x0 : x1;
-    }
-
-    @Override
-    public double getY1() {
-        return (direction == DECREASING) ? y0 : y1;
     }
 
     private double TforY1;
