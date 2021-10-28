@@ -72,7 +72,7 @@ public class QAreaPerformanceTests extends TestCase {
     public void testRandomQuads() throws FileNotFoundException {
         List<Shape> shapes = new ArrayList<>();
         Random random = new Random(0);
-        for(int a = 0; a < 200; a++) {
+        for(int a = 0; a < 100; a++) {
             Path2D p = new Path2D.Double();
             double x = random.nextDouble() * 1000;
             double y = random.nextDouble() * 1000;

@@ -338,6 +338,9 @@ final class QOrder3 extends QCurve {
 
 
     static double[][] thetaLUT;
+    static double thetaLUTdivisor;
+
+    double[] interpolationRow = new double[3];
 
     /**
      * Return a cached LUT approximating three values:
@@ -352,9 +355,10 @@ final class QOrder3 extends QCurve {
      *
      * @param z an input that is (R / sqrt(Q*Q*Q))
      */
-    private static double[] getThetaLUT(double z) {
+    private double[] getThetaLUT(double z) {
         if (thetaLUT == null) {
             thetaLUT = new double[1024][3];
+            thetaLUTdivisor = 2.0 / ((double)thetaLUT.length);
             for(int a = 0; a<thetaLUT.length; a++) {
                 double k = ((double)a) / ((double)(thetaLUT.length)) * 2 - 1;
 
@@ -368,10 +372,27 @@ final class QOrder3 extends QCurve {
             }
         }
 
-        int index = (int) ( (z + 1) / 2.0 * thetaLUT.length);
-        if (index >= thetaLUT.length)
-            index = thetaLUT.length - 1;
-        return thetaLUT[index];
+        int index = (int) ( (z + 1) / thetaLUTdivisor);
+        if (index >= thetaLUT.length - 1) {
+            return thetaLUT[thetaLUT.length - 1];
+        } else {
+            // We'd be pretty close if we just did this:
+            // return thetaLUT[index];
+
+            // ... but let's go one step further and do a linear interpolation between
+            // thetaLUT[index] and thetaLUT[index + 1]
+
+            // double floor = index * thetaLUTdivisor - 1;
+            // double ceil = floor + thetaLUTdivisor;
+            // double t = (z - floor) / thetaLUTdivisor;
+            double t = (z + 1) / thetaLUTdivisor - index;
+            for(int a = 0; a < interpolationRow.length; a++) {
+                double v1 = thetaLUT[index][a];
+                double v2 = thetaLUT[index + 1][a];
+                interpolationRow[a] = v1 + (v2 - v1) * t;
+            }
+            return interpolationRow;
+        }
     }
 
     private double refineTforY(double targetY, double t) {
